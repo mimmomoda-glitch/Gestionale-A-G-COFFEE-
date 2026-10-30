@@ -36,41 +36,70 @@
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 h-full flex flex-col" x-data="appData()" x-init="initData()">
+<body :class="isDarkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-100 text-slate-900'" class="h-full flex flex-col transition-colors duration-200" x-data="appData()" x-init="initData()">
 
     <!-- Header -->
-    <header class="bg-slate-800 border-b border-slate-700 shadow-md sticky top-0 z-40">
+    <header :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'" class="border-b shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
                 <div class="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/30">
                     <i class="fa-solid fa-ship text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold tracking-tight text-white">Magazzino & Flotta</h1>
-                    <p class="text-xs text-slate-400">Gestione Merci, Bolle di Scarico e Inventari a Bordo</p>
+                    <h1 class="text-xl font-bold tracking-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Magazzino & Flotta</h1>
+                    <p class="text-xs" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">Gestione Merci, Bolle di Scarico e Inventari a Bordo</p>
                 </div>
             </div>
-            <!-- Navigation Tabs -->
-            <nav class="flex flex-wrap justify-center gap-1 bg-slate-900 p-1.5 rounded-xl border border-slate-700">
-                <button @click="activeTab = 'dashboard'" :class="activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-slate-800'" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+            
+            <div class="flex items-center gap-3">
+                <!-- Theme Switcher Button -->
+                <button @click="toggleTheme()" :class="isDarkMode ? 'bg-slate-700 text-amber-400 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'" class="px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 border shadow-sm" :style="isDarkMode ? 'border-color: #334155' : 'border-color: #cbd5e1'">
+                    <i :class="isDarkMode ? 'fa-solid fa-sun text-base' : 'fa-solid fa-moon text-base'"></i>
+                    <span x-text="isDarkMode ? 'Chiaro' : 'Scuro'"></span>
                 </button>
-                <button @click="activeTab = 'prodotti'" :class="activeTab === 'prodotti' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-slate-800'" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-2">
-                    <i class="fa-solid fa-boxes-stacked"></i> Prodotti & Prezzi
-                </button>
-                <button @click="activeTab = 'magazzino'" :class="activeTab === 'magazzino' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-slate-800'" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-2">
-                    <i class="fa-solid fa-warehouse"></i> Magazzino Gen.
-                </button>
-                <button @click="activeTab = 'barche'" :class="activeTab === 'barche' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-slate-800'" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-2">
-                    <i class="fa-solid fa-sailboat"></i> Barche
-                </button>
-                <button @click="activeTab = 'scarichi'" :class="activeTab === 'scarichi' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-slate-800'" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-2">
-                    <i class="fa-solid fa-file-invoice"></i> Bolle Scarico
-                </button>
-                <button @click="activeTab = 'inventari'" :class="activeTab === 'inventari' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-slate-800'" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-2">
-                    <i class="fa-solid fa-clipboard-check"></i> Inventario
-                </button>
-            </nav>
+
+                <!-- Mobile Dropdown Navigation Menu -->
+                <div class="md:hidden w-full max-w-[200px]">
+                    <select x-model="activeTab" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'" class="w-full px-3 py-2.5 rounded-xl border text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                        <option value="dashboard">📊 Dashboard</option>
+                        <option value="prodotti">📦 Prodotti & Prezzi</option>
+                        <option value="magazzino">🏬 Magazzino Gen.</option>
+                        <option value="barche">⛵ Barche</option>
+                        <option value="scarichi">📄 Bolle Scarico</option>
+                        <option value="spostamenti">🔄 Spostamenti Barche</option>
+                        <option value="pendolari">🎟️ Schede Pendolari</option>
+                        <option value="inventari">📋 Inventario</option>
+                    </select>
+                </div>
+
+                <!-- Desktop / Tablet Navigation Buttons -->
+                <nav :class="isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-200 border-slate-300'" class="hidden md:flex flex-wrap justify-center gap-1.5 p-2 rounded-2xl border">
+                    <button @click="activeTab = 'dashboard'" :class="activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : (isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-700 hover:text-slate-900 hover:bg-white')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-base"></i> Dashboard
+                    </button>
+                    <button @click="activeTab = 'prodotti'" :class="activeTab === 'prodotti' ? 'bg-blue-600 text-white shadow-md' : (isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-700 hover:text-slate-900 hover:bg-white')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-stacked text-base"></i> Prodotti
+                    </button>
+                    <button @click="activeTab = 'magazzino'" :class="activeTab === 'magazzino' ? 'bg-blue-600 text-white shadow-md' : (isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-700 hover:text-slate-900 hover:bg-white')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-warehouse text-base"></i> Magazzino Gen.
+                    </button>
+                    <button @click="activeTab = 'barche'" :class="activeTab === 'barche' ? 'bg-blue-600 text-white shadow-md' : (isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-700 hover:text-slate-900 hover:bg-white')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-sailboat text-base"></i> Barche
+                    </button>
+                    <button @click="activeTab = 'scarichi'" :class="activeTab === 'scarichi' ? 'bg-blue-600 text-white shadow-md' : (isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-700 hover:text-slate-900 hover:bg-white')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice text-base"></i> Bolle Scarico
+                    </button>
+                    <button @click="activeTab = 'spostamenti'" :class="activeTab === 'spostamenti' ? 'bg-blue-600 text-white shadow-md' : (isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-700 hover:text-slate-900 hover:bg-white')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-right-left text-base"></i> Spostamenti
+                    </button>
+                    <button @click="activeTab = 'pendolari'" :class="activeTab === 'pendolari' ? 'bg-blue-600 text-white shadow-md' : (isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-700 hover:text-slate-900 hover:bg-white')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-ticket text-base"></i> Scheda Pendolari
+                    </button>
+                    <button @click="activeTab = 'inventari'" :class="activeTab === 'inventari' ? 'bg-blue-600 text-white shadow-md' : (isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-700 hover:text-slate-900 hover:bg-white')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-base"></i> Inventario
+                    </button>
+                </nav>
+            </div>
         </div>
     </header>
 
@@ -203,7 +232,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
                         <h2 class="text-xl font-bold text-white">Anagrafica Prodotti e Prezzi</h2>
-                        <p class="text-xs text-slate-400">Definisci i prodotti con prezzo di costo e prezzo di vendita al pubblico.</p>
+                        <p class="text-xs text-slate-400">Definisci i prodotti con prezzo di costo, prezzo di vendita e prezzo scontato per pendolari (Pass/Pen).</p>
                     </div>
                     <button @click="openProductModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-medium shadow transition flex items-center gap-2">
                         <i class="fa-solid fa-plus"></i> Nuovo Prodotto
@@ -216,8 +245,8 @@
                             <tr>
                                 <th class="p-3">Nome Prodotto</th>
                                 <th class="p-3">Categoria</th>
-                                <th class="p-3">Unità di Misura</th>
                                 <th class="p-3 text-right">Prezzo Costo</th>
+                                <th class="p-3 text-right">P.zo Pendolari (Scontato)</th>
                                 <th class="p-3 text-right">Prezzo Vendita</th>
                                 <th class="p-3 text-center">Azioni</th>
                             </tr>
@@ -227,17 +256,14 @@
                                 <tr>
                                     <td class="p-3 font-semibold text-white" x-text="p.name"></td>
                                     <td class="p-3 text-slate-400" x-text="p.category || 'Generale'"></td>
-                                    <td class="p-3" x-text="p.unit || 'Pz'"></td>
                                     <td class="p-3 text-right font-medium text-amber-400" x-text="formatCurrency(p.costPrice)"></td>
+                                    <td class="p-3 text-right font-bold text-sky-400" x-text="formatCurrency(p.pendolariPrice !== undefined ? p.pendolariPrice : p.costPrice)"></td>
                                     <td class="p-3 text-right font-medium text-emerald-400" x-text="formatCurrency(p.sellPrice)"></td>
                                     <td class="p-3 text-center space-x-2">
                                         <button @click="editProduct(p)" class="text-blue-400 hover:text-blue-300 p-1"><i class="fa-solid fa-pen"></i></button>
                                         <button @click="deleteProduct(p.id)" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash"></i></button>
                                     </td>
                                 </tr>
-                            </template>
-                            <template x-if="products.length === 0">
-                                <tr><td colspan="6" class="p-6 text-center text-slate-500">Nessun prodotto inserito. Clicca su "Nuovo Prodotto".</td></tr>
                             </template>
                         </tbody>
                     </table>
@@ -464,18 +490,18 @@
 
                         <!-- Add Item Row -->
                         <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 space-y-3">
-                            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Aggiungi Articoli alla Bolla</h4>
+                            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Prodotti da Scaricare</h4>
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Prodotto</label>
                                 <select x-model="currentTransferItem.productId" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
                                     <option value="">-- Seleziona prodotto --</option>
                                     <template x-for="p in products" :key="p.id">
-                                        <option :value="p.id" x-text="p.name + ' (Disp. Gen: ' + getWarehouseProductQty(p.id) + ')'"></option>
+                                        <option :value="p.id" x-text="p.name + ' (Disponibili in Mag.: ' + getWarehouseProductQty(p.id) + ')'"></option>
                                     </template>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs text-slate-400 mb-1">Quantità da scaricare</label>
+                                <label class="block text-xs text-slate-400 mb-1">Quantità da Scaricare</label>
                                 <input type="number" step="0.01" min="0.01" x-model.number="currentTransferItem.quantity" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="0">
                             </div>
                             <button type="button" @click="addTransferItem()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 rounded-xl text-xs transition">
@@ -483,15 +509,15 @@
                             </button>
                         </div>
 
-                        <!-- Items List in Current Bolla -->
+                        <!-- Items List -->
                         <div class="space-y-2">
-                            <h4 class="text-xs font-semibold text-slate-300 uppercase">Articoli nella Bolla (<span x-text="transferForm.items.length"></span>)</h4>
-                            <div class="max-h-40 overflow-y-auto space-y-1">
+                            <h4 class="text-xs font-semibold text-slate-300 uppercase">Articoli in Bolla (<span x-text="transferForm.items.length"></span>)</h4>
+                            <div class="max-h-36 overflow-y-auto space-y-1">
                                 <template x-for="(item, index) in transferForm.items" :key="index">
                                     <div class="flex justify-between items-center bg-slate-900 p-2 rounded-lg text-xs border border-slate-700">
                                         <div>
                                             <span class="font-medium text-white" x-text="getProductName(item.productId)"></span>
-                                            <span class="text-slate-400 ml-2" x-text="'Q.tà: ' + item.quantity"></span>
+                                            <span class="text-purple-400 ml-2" x-text="'Q.tà: ' + item.quantity"></span>
                                         </div>
                                         <button type="button" @click="transferForm.items.splice(index, 1)" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-xmark"></i></button>
                                     </div>
@@ -505,10 +531,10 @@
                     </form>
                 </div>
 
-                <!-- Transfers History -->
+                <!-- History of Outgoing Transfers -->
                 <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 lg:col-span-2">
                     <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-file-lines text-purple-400"></i> Storico Bolle di Scarico Emesse
+                        <i class="fa-solid fa-clock-rotate-left text-purple-400"></i> Storico Bolle di Scarico Barche
                     </h3>
                     <div class="space-y-4 max-h-[600px] overflow-y-auto">
                         <template x-for="t in transfers.slice().reverse()" :key="t.id">
@@ -517,13 +543,12 @@
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <span class="font-bold text-white text-base" x-text="t.bollaNumber"></span>
-                                            <span class="bg-purple-500/10 text-purple-400 text-xs px-2 py-0.5 rounded-full border border-purple-500/20 font-semibold" x-text="getBoatName(t.boatId)"></span>
+                                            <span class="text-xs text-slate-400" x-text="'(' + t.date + ')'"></span>
                                         </div>
-                                        <p class="text-xs text-slate-400 mt-0.5" x-text="'Emessa in data: ' + t.date"></p>
+                                        <div class="text-xs font-semibold text-emerald-400 mt-1" x-text="'Destinazione: ' + getBoatName(t.boatId) + ' (' + (t.destinationCity || 'NAPOLI') + ')'"></div>
                                     </div>
                                     <div class="flex items-center gap-3">
-                                        <span class="text-sm font-bold text-amber-400" x-text="'Tot. Costo: ' + formatCurrency(getTransferCost(t))"></span>
-                                        <button @click="printTransfer(t)" class="text-purple-400 hover:text-purple-300 text-xs font-medium flex items-center gap-1 bg-purple-500/10 px-2 py-1 rounded-lg border border-purple-500/20"><i class="fa-solid fa-print"></i> Stampa Bolla</button>
+                                        <button @click="printTransfer(t)" class="text-purple-400 hover:text-purple-300 text-xs font-medium flex items-center gap-1 bg-purple-500/10 px-2.5 py-1 rounded-lg border border-purple-500/20"><i class="fa-solid fa-print"></i> Stampa Bolla</button>
                                         <button @click="deleteTransfer(t.id)" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash"></i></button>
                                     </div>
                                 </div>
@@ -533,17 +558,13 @@
                                             <tr>
                                                 <th class="pb-1">Prodotto</th>
                                                 <th class="pb-1 text-center">Quantità Scaricata</th>
-                                                <th class="pb-1 text-right">Costo Unit.</th>
-                                                <th class="pb-1 text-right">Totale Costo</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-slate-800">
                                             <template x-for="item in t.items" :key="item.productId">
                                                 <tr>
                                                     <td class="py-1.5 font-medium text-white" x-text="getProductName(item.productId)"></td>
-                                                    <td class="py-1.5 text-center" x-text="item.quantity"></td>
-                                                    <td class="py-1.5 text-right" x-text="formatCurrency(item.costPrice)"></td>
-                                                    <td class="py-1.5 text-right font-medium" x-text="formatCurrency(item.quantity * item.costPrice)"></td>
+                                                    <td class="py-1.5 text-center font-bold text-purple-400" x-text="item.quantity"></td>
                                                 </tr>
                                             </template>
                                         </tbody>
@@ -552,20 +573,279 @@
                             </div>
                         </template>
                         <template x-if="transfers.length === 0">
-                            <p class="text-center text-slate-500 py-8">Nessuna bolla di scarico registrata.</p>
+                            <p class="text-center text-slate-500 py-8">Nessuna bolla di scarico emessa.</p>
                         </template>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 6. INVENTARIO & RISCONTRO TAB -->
+        <!-- 6. SPOSTAMENTI TRA BARCHE TAB -->
+        <div x-show="activeTab === 'spostamenti'" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Form Trasferimento Tra Barche -->
+                <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 lg:col-span-1">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-right-left text-amber-400"></i> Trasferimento Merce Barca &rarr; Barca
+                    </h3>
+                    <form @submit.prevent="createBoatTransfer" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">N° Bolla Trasferimento</label>
+                            <input type="text" x-model="boatTransferForm.bollaNumber" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500" placeholder="es. TRASF 01/2026">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Data Spostamento</label>
+                            <input type="date" x-model="boatTransferForm.date" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Barca Origine (Mittente)</label>
+                            <select x-model="boatTransferForm.fromBoatId" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                                <option value="">-- Seleziona Barca Mittente --</option>
+                                <template x-for="b in boats" :key="b.id">
+                                    <option :value="b.id" x-text="b.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Barca Destinazione (Ricevente)</label>
+                            <select x-model="boatTransferForm.toBoatId" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                                <option value="">-- Seleziona Barca Ricevente --</option>
+                                <template x-for="b in boats" :key="b.id">
+                                    <option :value="b.id" x-text="b.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Luogo di Destinazione</label>
+                            <input type="text" x-model="boatTransferForm.destinationCity" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500" placeholder="es. NAPOLI">
+                        </div>
+
+                        <!-- Add Item Row -->
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Prodotti da Trasferire</h4>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Prodotto</label>
+                                <select x-model="currentBoatTransferItem.productId" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                                    <option value="">-- Seleziona prodotto --</option>
+                                    <template x-for="p in products" :key="p.id">
+                                        <option :value="p.id" x-text="p.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Quantità</label>
+                                <input type="number" step="0.01" min="0.01" x-model.number="currentBoatTransferItem.quantity" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500" placeholder="0">
+                            </div>
+                            <button type="button" @click="addBoatTransferItem()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 rounded-xl text-xs transition">
+                                + Aggiungi allo Spostamento
+                            </button>
+                        </div>
+
+                        <!-- Items List -->
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-semibold text-slate-300 uppercase">Articoli da Trasferire (<span x-text="boatTransferForm.items.length"></span>)</h4>
+                            <div class="max-h-36 overflow-y-auto space-y-1">
+                                <template x-for="(item, index) in boatTransferForm.items" :key="index">
+                                    <div class="flex justify-between items-center bg-slate-900 p-2 rounded-lg text-xs border border-slate-700">
+                                        <div>
+                                            <span class="font-medium text-white" x-text="getProductName(item.productId)"></span>
+                                            <span class="text-amber-400 ml-2" x-text="'Q.tà: ' + item.quantity"></span>
+                                        </div>
+                                        <button type="button" @click="boatTransferForm.items.splice(index, 1)" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-2.5 rounded-xl text-sm shadow transition">
+                            Esegui Trasferimento Barca &rarr; Barca
+                        </button>
+                    </form>
+                </div>
+
+                <!-- History of Boat-to-Boat Transfers -->
+                <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 lg:col-span-2">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-400"></i> Storico Spostamenti Barca &rarr; Barca
+                    </h3>
+                    <div class="space-y-4 max-h-[600px] overflow-y-auto">
+                        <template x-for="bt in boatTransfers.slice().reverse()" :key="bt.id">
+                            <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-4 space-y-3">
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-3">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-white text-base" x-text="bt.bollaNumber"></span>
+                                            <span class="text-xs text-slate-400" x-text="'(' + bt.date + ')'"></span>
+                                        </div>
+                                        <div class="text-xs font-semibold text-amber-400 mt-1 flex items-center gap-2">
+                                            <span x-text="getBoatName(bt.fromBoatId)"></span>
+                                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                                            <span x-text="getBoatName(bt.toBoatId)"></span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <button @click="printBoatTransferDoc(bt)" class="text-amber-400 hover:text-amber-300 text-xs font-medium flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20"><i class="fa-solid fa-print"></i> Stampa Bolla</button>
+                                        <button @click="deleteBoatTransfer(bt.id)" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <table class="w-full text-left text-xs text-slate-300">
+                                        <thead class="text-slate-400">
+                                            <tr>
+                                                <th class="pb-1">Prodotto</th>
+                                                <th class="pb-1 text-center">Quantità Trasferita</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-800">
+                                            <template x-for="item in bt.items" :key="item.productId">
+                                                <tr>
+                                                    <td class="py-1.5 font-medium text-white" x-text="getProductName(item.productId)"></td>
+                                                    <td class="py-1.5 text-center font-bold text-amber-400" x-text="item.quantity"></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="boatTransfers.length === 0">
+                            <p class="text-center text-slate-500 py-8">Nessun trasferimento tra barche registrato.</p>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6.5 SCHEDA PENDOLARI TAB -->
+        <div x-show="activeTab === 'pendolari'" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Form Registrazione Scheda Pendolari -->
+                <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 lg:col-span-1">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-ticket text-sky-400"></i> Nuova Scheda Pendolari
+                    </h3>
+                    <form @submit.prevent="savePendolariSheet" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Data Scheda</label>
+                            <input type="date" x-model="pendolariForm.date" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Barca (Mezzo)</label>
+                            <select x-model="pendolariForm.boatId" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                                <option value="">-- Seleziona Barca --</option>
+                                <template x-for="b in boats" :key="b.id">
+                                    <option :value="b.id" x-text="b.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Note / Nome Pendolare / Riferimento</label>
+                            <input type="text" x-model="pendolariForm.notes" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500" placeholder="es. Scheda Giornaliera Pass">
+                        </div>
+
+                        <!-- Add Item Row -->
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Prodotti Consumati dai Pendolari</h4>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Prodotto</label>
+                                <select x-model="currentPendolariItem.productId" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                                    <option value="">-- Seleziona prodotto --</option>
+                                    <template x-for="p in products" :key="p.id">
+                                        <option :value="p.id" x-text="p.name + ' (P.zo Scontato Pendolari: ' + formatCurrency(p.pendolariPrice !== undefined ? p.pendolariPrice : p.costPrice) + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Quantità Pendolari</label>
+                                <input type="number" step="0.01" min="0.01" x-model.number="currentPendolariItem.quantity" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500" placeholder="0">
+                            </div>
+                            <button type="button" @click="addPendolariItem()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 rounded-xl text-xs transition">
+                                + Aggiungi alla Scheda
+                            </button>
+                        </div>
+
+                        <!-- Items List -->
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-semibold text-slate-300 uppercase">Articoli in Scheda (<span x-text="pendolariForm.items.length"></span>)</h4>
+                            <div class="max-h-36 overflow-y-auto space-y-1">
+                                <template x-for="(item, index) in pendolariForm.items" :key="index">
+                                    <div class="flex justify-between items-center bg-slate-900 p-2 rounded-lg text-xs border border-slate-700">
+                                        <div>
+                                            <span class="font-medium text-white" x-text="getProductName(item.productId)"></span>
+                                            <span class="text-sky-400 ml-2" x-text="'Q.tà: ' + item.quantity + ' @ ' + formatCurrency(item.pendolariPrice)"></span>
+                                        </div>
+                                        <button type="button" @click="pendolariForm.items.splice(index, 1)" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-medium py-2.5 rounded-xl text-sm shadow transition">
+                            Registra Scheda Pendolari
+                        </button>
+                    </form>
+                </div>
+
+                <!-- History of Pendolari Sheets -->
+                <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 lg:col-span-2">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-sky-400"></i> Storico Schede Pendolari Registrate
+                    </h3>
+                    <div class="space-y-4 max-h-[600px] overflow-y-auto">
+                        <template x-for="ps in pendolariSheets.slice().reverse()" :key="ps.id">
+                            <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-4 space-y-3">
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-3">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-white text-base" x-text="getBoatName(ps.boatId)"></span>
+                                            <span class="text-xs text-slate-400" x-text="'(' + ps.date + ')'"></span>
+                                        </div>
+                                        <div class="text-xs font-semibold text-sky-400 mt-1" x-text="ps.notes || 'Scheda Pendolari'"></div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs font-bold text-sky-400" x-text="'Totale Pendolari: ' + formatCurrency(getPendolariSheetTotal(ps))"></span>
+                                        <button @click="deletePendolariSheet(ps.id)" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <table class="w-full text-left text-xs text-slate-300">
+                                        <thead class="text-slate-400">
+                                            <tr>
+                                                <th class="pb-1">Prodotto</th>
+                                                <th class="pb-1 text-center">Quantità</th>
+                                                <th class="pb-1 text-right">P.zo Pendolari (Scontato)</th>
+                                                <th class="pb-1 text-right">Importo Pendolari</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-800">
+                                            <template x-for="item in ps.items" :key="item.productId">
+                                                <tr>
+                                                    <td class="py-1.5 font-medium text-white" x-text="getProductName(item.productId)"></td>
+                                                    <td class="py-1.5 text-center font-bold text-sky-400" x-text="item.quantity"></td>
+                                                    <td class="py-1.5 text-right" x-text="formatCurrency(item.pendolariPrice)"></td>
+                                                    <td class="py-1.5 text-right font-bold text-sky-400" x-text="formatCurrency(item.quantity * item.pendolariPrice)"></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="pendolariSheets.length === 0">
+                            <p class="text-center text-slate-500 py-8">Nessuna scheda pendolari registrata.</p>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. INVENTARIO & RISCONTRO TAB -->
         <div x-show="activeTab === 'inventari'" class="space-y-6">
             <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
                         <h2 class="text-xl font-bold text-white">Inventario, Incassi e Riscontro Finale</h2>
-                        <p class="text-xs text-slate-400">Inserisci le quantità fisiche e il totale incassato (Cassa/POS) per verificare plusvalenze o ammanchi economici.</p>
+                        <p class="text-xs text-slate-400">Scomposizione automatica tra la merce usata dai pendolari (a prezzo scontato Pass/Pen) e la vendita standard al pubblico.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <select x-model="selectedBoatForInventory" @change="loadBoatInventoryData()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
@@ -584,7 +864,7 @@
                                 <h3 class="text-lg font-bold text-white flex items-center gap-2">
                                     <i class="fa-solid fa-sailboat text-emerald-400"></i> Barca: <span x-text="getBoatName(selectedBoatForInventory)"></span>
                                 </h3>
-                                <p class="text-xs text-slate-400">Inserisci le giacenze riscontrate a bordo per calcolare la merce venduta/mancante.</p>
+                                <p class="text-xs text-slate-400">Conteggio automatico delle quote pendolari al prezzo agevolato e del pubblico al prezzo pieno di listino.</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-4">
                                 <div>
@@ -600,11 +880,14 @@
                                 <thead class="bg-slate-900 text-xs uppercase text-slate-400 border-b border-slate-700">
                                     <tr>
                                         <th class="p-3">Prodotto</th>
-                                        <th class="p-3 text-center">Q.tà Teorica Caricata</th>
-                                        <th class="p-3 text-center">Q.tà Rilevata (Fisica)</th>
-                                        <th class="p-3 text-center">Q.tà Venduta / Consumata</th>
-                                        <th class="p-3 text-right">P.zo Vendita Unit.</th>
-                                        <th class="p-3 text-right">Incasso Atteso (Vendita)</th>
+                                        <th class="p-3 text-center">Q.tà Teorica</th>
+                                        <th class="p-3 text-center">Q.tà Fisica</th>
+                                        <th class="p-3 text-center">Consumo Tot.</th>
+                                        <th class="p-3 text-center">Q.tà Pendolari</th>
+                                        <th class="p-3 text-right">Incasso Pendolari (P.zo Scontato)</th>
+                                        <th class="p-3 text-center">Q.tà Pubblico</th>
+                                        <th class="p-3 text-right">Incasso Pubblico (P.zo Pieno)</th>
+                                        <th class="p-3 text-right">Incasso Atteso Totale</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-700">
@@ -613,11 +896,14 @@
                                             <td class="p-3 font-semibold text-white" x-text="row.productName"></td>
                                             <td class="p-3 text-center font-medium text-blue-400" x-text="row.theoreticalQty"></td>
                                             <td class="p-3 text-center">
-                                                <input type="number" step="0.01" min="0" x-model.number="row.physicalQty" class="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-center text-sm text-white focus:outline-none focus:border-emerald-500 font-bold">
+                                                <input type="number" step="0.01" min="0" x-model.number="row.physicalQty" class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-center text-sm text-white focus:outline-none focus:border-emerald-500 font-bold">
                                             </td>
                                             <td class="p-3 text-center font-bold text-amber-400" x-text="getSoldQty(row)"></td>
-                                            <td class="p-3 text-right text-slate-400" x-text="formatCurrency(row.sellPrice)"></td>
-                                            <td class="p-3 text-right font-bold text-emerald-400" x-text="formatCurrency(getExpectedRevenueRow(row))"></td>
+                                            <td class="p-3 text-center font-bold text-sky-400" x-text="row.pendolariQty || 0"></td>
+                                            <td class="p-3 text-right font-medium text-sky-400" x-text="formatCurrency(getPendolariRevenueRow(row))"></td>
+                                            <td class="p-3 text-center font-bold text-emerald-400" x-text="getPublicSoldQty(row)"></td>
+                                            <td class="p-3 text-right font-medium text-emerald-400" x-text="formatCurrency(getPublicRevenueRow(row))"></td>
+                                            <td class="p-3 text-right font-bold text-blue-400" x-text="formatCurrency(getExpectedRevenueRow(row))"></td>
                                         </tr>
                                     </template>
                                 </tbody>
@@ -626,11 +912,14 @@
 
                         <!-- Cash Receipts & Final Difference Section -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900/80 p-5 rounded-2xl border border-slate-700">
-                            <!-- Expected Revenue -->
-                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                            <!-- Expected Revenue Breakdown -->
+                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-1">
                                 <p class="text-xs text-slate-400 uppercase tracking-wider font-medium">Totale Incasso Atteso (Teorico)</p>
-                                <div class="text-2xl font-black text-blue-400 mt-1" x-text="formatCurrency(getTotalExpectedRevenue())"></div>
-                                <p class="text-xs text-slate-500 mt-1">Calcolato dal valore di vendita delle merci consumate.</p>
+                                <div class="text-2xl font-black text-blue-400" x-text="formatCurrency(getTotalExpectedRevenue())"></div>
+                                <div class="text-xs text-slate-400 pt-1 space-y-0.5">
+                                    <div class="flex justify-between"><span>Quota Pendolari (Pass/Pen):</span> <strong class="text-sky-400" x-text="formatCurrency(getTotalPendolariRevenue())"></strong></div>
+                                    <div class="flex justify-between"><span>Quota Pubblico (Listino):</span> <strong class="text-emerald-400" x-text="formatCurrency(getTotalPublicRevenue())"></strong></div>
+                                </div>
                             </div>
 
                             <!-- Actual Revenue Input -->
@@ -639,7 +928,7 @@
                                     <label class="text-xs text-emerald-400 uppercase tracking-wider font-semibold block mb-1">Totale Incasso Reale (Cassa / POS) (€)</label>
                                     <input type="number" step="0.01" min="0" x-model.number="actualRevenueInput" class="w-full bg-slate-900 border border-emerald-500/50 rounded-xl px-3 py-2 text-lg text-white font-bold focus:outline-none focus:border-emerald-400" placeholder="0.00">
                                 </div>
-                                <p class="text-xs text-slate-500 mt-1">Inserisci l'incasso effettivo versato dal mezzo.</p>
+                                <p class="text-xs text-slate-500 mt-1">Digita l'incasso effettivo consegnato dal mezzo.</p>
                             </div>
 
                             <!-- Financial Difference -->
@@ -705,7 +994,7 @@
                                             <th class="pb-1">Prodotto</th>
                                             <th class="pb-1 text-center">Q.tà Teorica</th>
                                             <th class="pb-1 text-center">Q.tà Rilevata</th>
-                                            <th class="pb-1 text-center">Consumo/Venduto</th>
+                                            <th class="pb-1 text-center">Consumo Tot.</th>
                                             <th class="pb-1 text-right">P.zo Vendita</th>
                                             <th class="pb-1 text-right">Valore Atteso</th>
                                         </tr>
@@ -748,14 +1037,18 @@
                     <label class="block text-xs font-medium text-slate-300 mb-1">Categoria</label>
                     <input type="text" x-model="productModal.form.category" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="es. Bevande, Snack">
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-3 gap-2">
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1">Prezzo Costo (€)</label>
                         <input type="number" step="0.01" min="0" x-model.number="productModal.form.costPrice" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Prezzo Vendita (€)</label>
-                        <input type="number" step="0.01" min="0" x-model.number="productModal.form.sellPrice" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <label class="block text-xs font-medium text-sky-400 mb-1">P.zo Pendolari (€)</label>
+                        <input type="number" step="0.01" min="0" x-model.number="productModal.form.pendolariPrice" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-emerald-400 mb-1">Prezzo Vendita (€)</label>
+                        <input type="number" step="0.01" min="0" x-model.number="productModal.form.sellPrice" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                     </div>
                 </div>
                 <div class="flex justify-end space-x-2 pt-3">
@@ -953,11 +1246,14 @@
     <script>
         function appData() {
             return {
+                isDarkMode: true,
                 activeTab: 'dashboard',
                 products: [],
                 warehouseLoads: [],
                 boats: [],
                 transfers: [],
+                boatTransfers: [],
+                pendolariSheets: [],
                 inventoryLogs: [],
 
                 companyDetails: {
@@ -967,25 +1263,7 @@
                     address2: 'SEDE OPERATIVA V. SANTA MARIA LA BRUNA T. DEL GRECO(NA)'
                 },
 
-                notification: {
-                    show: false,
-                    title: '',
-                    message: '',
-                    type: 'success'
-                },
-
-                printModal: {
-                    open: false,
-                    title: '',
-                    type: '',
-                    docNumber: '',
-                    date: '',
-                    destination: '',
-                    destinationCity: 'NAPOLI',
-                    items: [],
-                    totalAmount: 0,
-                    showPrices: true
-                },
+                notification: { show: false, title: '', message: '', type: 'success' },
 
                 loadForm: {
                     docNumber: '',
@@ -1012,10 +1290,36 @@
                     quantity: ''
                 },
 
+                pendolariForm: {
+                    date: new Date().toISOString().split('T')[0],
+                    boatId: '',
+                    notes: '',
+                    items: []
+                },
+
+                currentPendolariItem: {
+                    productId: '',
+                    quantity: ''
+                },
+
+                boatTransferForm: {
+                    bollaNumber: '',
+                    date: new Date().toISOString().split('T')[0],
+                    fromBoatId: '',
+                    toBoatId: '',
+                    destinationCity: 'NAPOLI',
+                    items: []
+                },
+
+                currentBoatTransferItem: {
+                    productId: '',
+                    quantity: ''
+                },
+
                 productModal: {
                     open: false,
                     isEdit: false,
-                    form: { id: '', name: '', category: '', unit: 'Pz', costPrice: 0, sellPrice: 0 }
+                    form: { id: '', name: '', category: '', unit: 'Pz', costPrice: 0, pendolariPrice: 0, sellPrice: 0 }
                 },
 
                 boatModal: {
@@ -1024,40 +1328,121 @@
                     form: { id: '', name: '', skipper: '', notes: '' }
                 },
 
+                printModal: {
+                    open: false,
+                    title: '',
+                    type: '',
+                    docNumber: '',
+                    date: '',
+                    destination: '',
+                    destinationCity: 'NAPOLI',
+                    items: [],
+                    totalAmount: 0,
+                    showPrices: false
+                },
+
                 selectedBoatForInventory: '',
                 inventoryDate: new Date().toISOString().split('T')[0],
                 currentInventoryRows: [],
                 actualRevenueInput: 0,
 
                 initData() {
+                    const savedTheme = localStorage.getItem('gest_theme');
+                    if (savedTheme !== null) {
+                        this.isDarkMode = savedTheme === 'dark';
+                    }
+
                     const savedProducts = localStorage.getItem('gest_products');
                     const savedLoads = localStorage.getItem('gest_loads');
                     const savedBoats = localStorage.getItem('gest_boats');
                     const savedTransfers = localStorage.getItem('gest_transfers');
+                    const savedBoatTransfers = localStorage.getItem('gest_boat_transfers');
+                    const savedPendolari = localStorage.getItem('gest_pendolari');
                     const savedInventories = localStorage.getItem('gest_inventories');
 
                     if (savedProducts) this.products = JSON.parse(savedProducts);
                     if (savedLoads) this.warehouseLoads = JSON.parse(savedLoads);
                     if (savedBoats) this.boats = JSON.parse(savedBoats);
                     if (savedTransfers) this.transfers = JSON.parse(savedTransfers);
+                    if (savedBoatTransfers) this.boatTransfers = JSON.parse(savedBoatTransfers);
+                    if (savedPendolari) this.pendolariSheets = JSON.parse(savedPendolari);
                     if (savedInventories) this.inventoryLogs = JSON.parse(savedInventories);
 
-                    // Demo default values if empty
+                    // Import predefined products with Pass/Pen prices
                     if (this.products.length === 0) {
                         this.products = [
-                            { id: 'p1', name: 'NAT', category: 'Bevande', unit: 'Pz', costPrice: 0.30, sellPrice: 1.50 },
-                            { id: 'p2', name: 'FRIZZ', category: 'Bevande', unit: 'Pz', costPrice: 0.30, sellPrice: 1.50 },
-                            { id: 'p3', name: 'PERONI', category: 'Bevande', unit: 'Pz', costPrice: 0.80, sellPrice: 3.00 },
-                            { id: 'p4', name: 'BIRRA CAPRI', category: 'Bevande', unit: 'Pz', costPrice: 1.00, sellPrice: 4.00 },
-                            { id: 'p5', name: 'PROSECCO', category: 'Bevande', unit: 'Pz', costPrice: 3.50, sellPrice: 15.00 },
-                            { id: 'p6', name: 'SPRITZ', category: 'Bevande', unit: 'Pz', costPrice: 1.20, sellPrice: 5.00 },
-                            { id: 'p7', name: 'COCA', category: 'Bevande', unit: 'Pz', costPrice: 0.60, sellPrice: 2.50 },
-                            { id: 'p8', name: 'ZERO', category: 'Bevande', unit: 'Pz', costPrice: 0.60, sellPrice: 2.50 },
-                            { id: 'p9', name: 'FANTA', category: 'Bevande', unit: 'Pz', costPrice: 0.60, sellPrice: 2.50 },
-                            { id: 'p10', name: 'SPRITE', category: 'Bevande', unit: 'Pz', costPrice: 0.60, sellPrice: 2.50 },
-                            { id: 'p11', name: 'PATA', category: 'Snack', unit: 'Pz', costPrice: 0.50, sellPrice: 2.00 },
-                            { id: 'p12', name: 'BORSA CAPRI', category: 'Gadget', unit: 'Pz', costPrice: 2.00, sellPrice: 8.00 },
-                            { id: 'p13', name: 'BORSA CAPRI GRANDE', category: 'Gadget', unit: 'Pz', costPrice: 3.00, sellPrice: 12.00 }
+                            { id: 'p_acq', name: 'Acqua 💧', category: 'Bevande', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
+                            { id: 'p_ara', name: 'Arachidi / Frutta S. 🥜', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
+                            { id: 'p_bp', name: 'Borse Piccole 👜', category: 'Gadget', unit: 'Pz', costPrice: 3.0, pendolariPrice: 6.0, sellPrice: 6.0 },
+                            { id: 'p_bg', name: 'Borse Grandi 👜', category: 'Gadget', unit: 'Pz', costPrice: 5.0, pendolariPrice: 10.0, sellPrice: 10.0 },
+                            
+                            { id: 'p_bue_1', name: 'Bueno 🍫', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
+                            { id: 'p_bue_2', name: 'B-Ready 🍫', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
+                            { id: 'p_bue_3', name: 'Biscuits 🍫', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
+                            
+                            { id: 'p_cap', name: 'Cappelli 🧢', category: 'Gadget', unit: 'Pz', costPrice: 2.5, pendolariPrice: 5.0, sellPrice: 5.0 },
+                            { id: 'p_car_1', name: 'Caramelle 🍬', category: 'Snack', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_car_2', name: 'Gomme 🍬', category: 'Snack', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            
+                            { id: 'p_cia', name: 'Cialde ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
+                            { id: 'p_die', name: 'Dietor 🍬', category: 'Caffetteria', unit: 'Pz', costPrice: 0.0, pendolariPrice: 0.0, sellPrice: 0.0 },
+                            { id: 'p_fit', name: 'Fitness / Cereal Yo 🌾', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
+                            
+                            { id: 'p_fon_1', name: 'Fonzies 🍟', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
+                            { id: 'p_fon_2', name: 'Patatine 🍟', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
+                            
+                            { id: 'p_imp', name: 'Impermeabili 🧥', category: 'Gadget', unit: 'Pz', costPrice: 2.0, pendolariPrice: 3.25, sellPrice: 3.5 },
+                            { id: 'p_kin', name: 'Kinder Cards 🃏', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
+                            { id: 'p_lat', name: 'Latte 🥛', category: 'Caffetteria', unit: 'Pz', costPrice: 0.2, pendolariPrice: 0.5, sellPrice: 0.5 },
+                            
+                            { id: 'p_ltn_1', name: 'Coca Cola 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
+                            { id: 'p_ltn_2', name: 'Coca 0 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
+                            { id: 'p_ltn_3', name: 'Fanta 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
+                            { id: 'p_ltn_4', name: 'Sprite 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
+                            { id: 'p_ltn_5', name: 'Lemonsoda 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
+                            { id: 'p_ltn_6', name: 'Thé Pesca 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
+                            { id: 'p_ltn_7', name: 'Thé Limone 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
+                            
+                            { id: 'p_mag', name: 'Maglie 👕', category: 'Gadget', unit: 'Pz', costPrice: 2.5, pendolariPrice: 5.0, sellPrice: 5.0 },
+                            { id: 'p_mik', name: 'Mikado 🥖', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
+                            { id: 'p_muf', name: 'Muffin 🧁', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 3.0 },
+                            { id: 'p_nik', name: 'Nik Nok 🥜', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_pav', name: 'Pavesini 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_per', name: 'Peroni 🍺', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 4.5 },
+                            { id: 'p_pec', name: 'Peroni Capri 🍋', category: 'Bevande', unit: 'Pz', costPrice: 3.5, pendolariPrice: 7.5, sellPrice: 7.5 },
+                            { id: 'p_pri', name: 'Pringles 🥔', category: 'Snack', unit: 'Pz', costPrice: 1.2, pendolariPrice: 2.0, sellPrice: 3.5 },
+                            
+                            { id: 'p_vin_1', name: 'Prosecco 🍷', category: 'Bevande', unit: 'Pz', costPrice: 2.0, pendolariPrice: 3.0, sellPrice: 6.0 },
+                            { id: 'p_vin_2', name: 'Vino 🍷', category: 'Bevande', unit: 'Pz', costPrice: 2.0, pendolariPrice: 3.0, sellPrice: 6.0 },
+                            
+                            { id: 'p_red_1', name: 'Red Bull ⚡', category: 'Bevande', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
+                            { id: 'p_red_2', name: 'Gatorade ⚡', category: 'Bevande', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
+                            
+                            { id: 'p_rin_1', name: 'Ringo 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_rin_2', name: 'Oreo 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_rin_3', name: 'Baiocchi 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            
+                            { id: 'p_rit_1', name: 'Ritz 🍪', category: 'Snack', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
+                            { id: 'p_rit_2', name: 'Cipster 🍪', category: 'Snack', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
+                            
+                            { id: 'p_spr', name: 'Spritz 🍹', category: 'Bevande', unit: 'Pz', costPrice: 3.0, pendolariPrice: 8.0, sellPrice: 8.0 },
+                            { id: 'p_suc', name: 'Succo 🧃', category: 'Bevande', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 3.5 },
+                            { id: 'p_the', name: 'The Camomilla 🍵', category: 'Bevande', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.5, sellPrice: 2.5 },
+                            { id: 'p_tuc', name: 'Tuc 🍪', category: 'Snack', unit: 'Pz', costPrice: 1.2, pendolariPrice: 2.0, sellPrice: 4.0 },
+                            
+                            { id: 'p_twi_1', name: 'Twix 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_twi_2', name: 'M&M 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_twi_3', name: 'KitKat 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_twi_4', name: 'Mars 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_twi_5', name: 'Snickers 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
+                            
+                            { id: 'p_clm', name: 'Calamite 🧲', category: 'Gadget', unit: 'Pz', costPrice: 1.5, pendolariPrice: 3.0, sellPrice: 3.0 },
+                            { id: 'p_ptc', name: 'Portachiavi 🔑', category: 'Gadget', unit: 'Pz', costPrice: 1.5, pendolariPrice: 3.0, sellPrice: 3.0 },
+                            { id: 'p_cuc', name: 'Cucchiaio 🥄', category: 'Gadget', unit: 'Pz', costPrice: 1.5, pendolariPrice: 3.0, sellPrice: 3.0 },
+                            { id: 'p_cos', name: 'Costumi 🩳', category: 'Gadget', unit: 'Pz', costPrice: 2.5, pendolariPrice: 5.0, sellPrice: 5.0 },
+                            { id: 'p_dec', name: 'Decaffeinato ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 1.0, pendolariPrice: 2.5, sellPrice: 2.5 },
+                            { id: 'p_gin', name: 'Ginseng ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 1.0, pendolariPrice: 2.5, sellPrice: 2.5 },
+                            { id: 'p_orz', name: 'Orzo ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 1.0, pendolariPrice: 2.5, sellPrice: 2.5 }
                         ];
                         this.saveToLocalStorage();
                     }
@@ -1071,50 +1456,19 @@
                     }
                 },
 
-                // Print functions
-                printDocLoad(load) {
-                    const items = load.items || [load];
-                    const total = items.reduce((sum, item) => sum + (item.quantity * item.costPrice), 0);
-                    this.printModal = {
-                        open: true,
-                        title: 'DDT - Magazzino Generale',
-                        type: 'DOCUMENTO DI TRASPORTO',
-                        docNumber: load.docNumber,
-                        date: load.date,
-                        destination: 'MAGAZZINO GENERALE',
-                        destinationCity: 'POZZUOLI',
-                        items: items,
-                        totalAmount: total,
-                        showPrices: true
-                    };
-                },
-
-                printTransfer(t) {
-                    const total = t.items.reduce((sum, item) => sum + (item.quantity * item.costPrice), 0);
-                    this.printModal = {
-                        open: true,
-                        title: 'Bolla di Scarico Merce su Barca',
-                        type: 'DOCUMENTO DI TRASPORTO',
-                        docNumber: t.bollaNumber,
-                        date: t.date,
-                        destination: this.getBoatName(t.boatId),
-                        destinationCity: t.destinationCity || 'NAPOLI',
-                        items: t.items,
-                        totalAmount: total,
-                        showPrices: false
-                    };
-                },
-
-                triggerPrint() {
-                    window.print();
-                },
-
                 saveToLocalStorage() {
                     localStorage.setItem('gest_products', JSON.stringify(this.products));
                     localStorage.setItem('gest_loads', JSON.stringify(this.warehouseLoads));
                     localStorage.setItem('gest_boats', JSON.stringify(this.boats));
                     localStorage.setItem('gest_transfers', JSON.stringify(this.transfers));
+                    localStorage.setItem('gest_boat_transfers', JSON.stringify(this.boatTransfers));
+                    localStorage.setItem('gest_pendolari', JSON.stringify(this.pendolariSheets));
                     localStorage.setItem('gest_inventories', JSON.stringify(this.inventoryLogs));
+                },
+
+                toggleTheme() {
+                    this.isDarkMode = !this.isDarkMode;
+                    localStorage.setItem('gest_theme', this.isDarkMode ? 'dark' : 'light');
                 },
 
                 showNotify(title, message, type = 'success') {
@@ -1139,13 +1493,16 @@
                 // Product Management
                 openProductModal() {
                     this.productModal.isEdit = false;
-                    this.productModal.form = { id: 'p_' + Date.now(), name: '', category: '', unit: 'Pz', costPrice: 0, sellPrice: 0 };
+                    this.productModal.form = { id: 'p_' + Date.now(), name: '', category: '', unit: 'Pz', costPrice: 0, pendolariPrice: 0, sellPrice: 0 };
                     this.productModal.open = true;
                 },
 
                 editProduct(p) {
                     this.productModal.isEdit = true;
-                    this.productModal.form = { ...p };
+                    this.productModal.form = { 
+                        ...p,
+                        pendolariPrice: p.pendolariPrice !== undefined ? p.pendolariPrice : p.costPrice 
+                    };
                     this.productModal.open = true;
                 },
 
@@ -1338,6 +1695,117 @@
                     this.showNotify('Eliminata', 'Bolla di scarico rimossa.', 'error');
                 },
 
+                // Boat-to-Boat Transfers Management
+                addBoatTransferItem() {
+                    if (!this.currentBoatTransferItem.productId || !this.currentBoatTransferItem.quantity) {
+                        this.showNotify('Attenzione', 'Seleziona un prodotto e inserisci una quantità valida.', 'error');
+                        return;
+                    }
+                    const prod = this.products.find(p => p.id === this.currentBoatTransferItem.productId);
+                    this.boatTransferForm.items.push({
+                        productId: this.currentBoatTransferItem.productId,
+                        quantity: this.currentBoatTransferItem.quantity,
+                        costPrice: prod ? prod.costPrice : 0
+                    });
+                    this.currentBoatTransferItem.productId = '';
+                    this.currentBoatTransferItem.quantity = '';
+                },
+
+                createBoatTransfer() {
+                    if (!this.boatTransferForm.fromBoatId || !this.boatTransferForm.toBoatId) {
+                        this.showNotify('Attenzione', 'Seleziona sia la barca di origine che quella di destinazione.', 'error');
+                        return;
+                    }
+                    if (this.boatTransferForm.fromBoatId === this.boatTransferForm.toBoatId) {
+                        this.showNotify('Attenzione', 'La barca di origine e destinazione non possono coincidere.', 'error');
+                        return;
+                    }
+                    if (this.boatTransferForm.items.length === 0) {
+                        this.showNotify('Attenzione', 'Aggiungi almeno un articolo da trasferire.', 'error');
+                        return;
+                    }
+
+                    const newTransfer = {
+                        id: 'btransfer_' + Date.now(),
+                        ...this.boatTransferForm,
+                        items: [...this.boatTransferForm.items]
+                    };
+
+                    this.boatTransfers.push(newTransfer);
+                    this.saveToLocalStorage();
+                    this.showNotify('Spostamento Effettuato', `Trasferimento ${newTransfer.bollaNumber} registrato con successo.`);
+                    
+                    this.boatTransferForm.bollaNumber = '';
+                    this.boatTransferForm.fromBoatId = '';
+                    this.boatTransferForm.toBoatId = '';
+                    this.boatTransferForm.items = [];
+                },
+
+                deleteBoatTransfer(id) {
+                    this.boatTransfers = this.boatTransfers.filter(bt => bt.id !== id);
+                    this.saveToLocalStorage();
+                    this.showNotify('Eliminato', 'Spostamento tra barche rimosso.', 'error');
+                },
+
+                // Pendolari Sheets Management
+                addPendolariItem() {
+                    if (!this.currentPendolariItem.productId || !this.currentPendolariItem.quantity) {
+                        this.showNotify('Attenzione', 'Seleziona un prodotto e una quantità valida.', 'error');
+                        return;
+                    }
+                    const prod = this.products.find(p => p.id === this.currentPendolariItem.productId);
+                    this.pendolariForm.items.push({
+                        productId: this.currentPendolariItem.productId,
+                        quantity: this.currentPendolariItem.quantity,
+                        pendolariPrice: prod ? (prod.pendolariPrice !== undefined ? prod.pendolariPrice : prod.sellPrice) : 0
+                    });
+                    this.currentPendolariItem.productId = '';
+                    this.currentPendolariItem.quantity = '';
+                },
+
+                savePendolariSheet() {
+                    if (!this.pendolariForm.boatId) {
+                        this.showNotify('Attenzione', 'Seleziona la barca a cui associare la scheda pendolari.', 'error');
+                        return;
+                    }
+                    if (this.pendolariForm.items.length === 0) {
+                        this.showNotify('Attenzione', 'Inserisci almeno un articolo nella scheda pendolari.', 'error');
+                        return;
+                    }
+
+                    const newSheet = {
+                        id: 'psheet_' + Date.now(),
+                        ...this.pendolariForm,
+                        items: [...this.pendolariForm.items]
+                    };
+
+                    this.pendolariSheets.push(newSheet);
+                    this.saveToLocalStorage();
+                    this.showNotify('Scheda Registrata', 'Scheda pendolari salvata con successo.');
+
+                    this.pendolariForm.notes = '';
+                    this.pendolariForm.items = [];
+
+                    // Refresh inventory view if open for this boat
+                    if (this.selectedBoatForInventory === newSheet.boatId) {
+                        this.loadBoatInventoryData();
+                    }
+                },
+
+                getPendolariSheetTotal(ps) {
+                    return ps.items.reduce((sum, i) => sum + (i.quantity * i.pendolariPrice), 0);
+                },
+
+                deletePendolariSheet(id) {
+                    this.pendolariSheets = this.pendolariSheets.filter(ps => ps.id !== id);
+                    this.saveToLocalStorage();
+                    this.showNotify('Eliminata', 'Scheda pendolari rimossa.', 'error');
+
+                    if (this.selectedBoatForInventory) {
+                        this.loadBoatInventoryData();
+                    }
+                },
+
                 // Inventory & Reconciliation
                 loadBoatInventoryData() {
                     if (!this.selectedBoatForInventory) {
@@ -1349,32 +1817,94 @@
                     this.actualRevenueInput = 0;
 
                     let loadedMap = {};
+                    
+                    // Add direct transfers from central warehouse
                     this.transfers
                         .filter(t => t.boatId === this.selectedBoatForInventory)
                         .forEach(t => {
                             t.items.forEach(i => {
-                                loadedMap[i.productId] = (loadedMap[i.productId] || 0) + i.quantity;
+                                loadedMap[i.productId] = (loadedMap[i.productId] || 0) + Number(i.quantity);
+                            });
+                        });
+
+                    // Add transfers RECEIVED from other boats (+)
+                    this.boatTransfers
+                        .filter(bt => bt.toBoatId === this.selectedBoatForInventory)
+                        .forEach(bt => {
+                            bt.items.forEach(i => {
+                                loadedMap[i.productId] = (loadedMap[i.productId] || 0) + Number(i.quantity);
+                            });
+                        });
+
+                    // Subtract transfers SENT to other boats (-)
+                    this.boatTransfers
+                        .filter(bt => bt.fromBoatId === this.selectedBoatForInventory)
+                        .forEach(bt => {
+                            bt.items.forEach(i => {
+                                loadedMap[i.productId] = (loadedMap[i.productId] || 0) - Number(i.quantity);
+                            });
+                        });
+
+                    // Map pendolari quantities used by this boat
+                    let pendolariMap = {};
+                    this.pendolariSheets
+                        .filter(ps => ps.boatId === this.selectedBoatForInventory)
+                        .forEach(ps => {
+                            ps.items.forEach(i => {
+                                pendolariMap[i.productId] = (pendolariMap[i.productId] || 0) + Number(i.quantity);
                             });
                         });
 
                     this.currentInventoryRows = this.products.map(p => {
-                        const theoretical = loadedMap[p.id] || 0;
+                        const theoretical = Math.max(0, loadedMap[p.id] || 0);
+                        const pendolariQty = pendolariMap[p.id] || 0;
                         return {
                             productId: p.id,
                             productName: p.name,
                             theoreticalQty: theoretical,
                             physicalQty: theoretical, 
+                            pendolariQty: pendolariQty,
+                            pendolariPrice: p.pendolariPrice !== undefined ? p.pendolariPrice : p.costPrice,
                             sellPrice: p.sellPrice
                         };
                     });
                 },
 
                 getSoldQty(row) {
-                    return Math.max(0, row.theoreticalQty - row.physicalQty);
+                    return Math.max(0, Number(row.theoreticalQty || 0) - Number(row.physicalQty || 0));
+                },
+
+                getEffectivePendolariQty(row) {
+                    const totalSold = this.getSoldQty(row);
+                    const registeredPendolari = Number(row.pendolariQty || 0);
+                    // La quota pendolari non può mai superare il consumo totale effettivamente riscontrato
+                    return Math.min(totalSold, registeredPendolari);
+                },
+
+                getPublicSoldQty(row) {
+                    const totalSold = this.getSoldQty(row);
+                    const pendolariQty = this.getEffectivePendolariQty(row);
+                    return Math.max(0, totalSold - pendolariQty);
+                },
+
+                getPendolariRevenueRow(row) {
+                    return this.getEffectivePendolariQty(row) * Number(row.pendolariPrice || 0);
+                },
+
+                getPublicRevenueRow(row) {
+                    return this.getPublicSoldQty(row) * Number(row.sellPrice || 0);
                 },
 
                 getExpectedRevenueRow(row) {
-                    return this.getSoldQty(row) * row.sellPrice;
+                    return this.getPendolariRevenueRow(row) + this.getPublicRevenueRow(row);
+                },
+
+                getTotalPendolariRevenue() {
+                    return this.currentInventoryRows.reduce((sum, row) => sum + this.getPendolariRevenueRow(row), 0);
+                },
+
+                getTotalPublicRevenue() {
+                    return this.currentInventoryRows.reduce((sum, row) => sum + this.getPublicRevenueRow(row), 0);
                 },
 
                 getTotalExpectedRevenue() {
@@ -1400,6 +1930,8 @@
                             physicalQty: row.physicalQty,
                             soldQty: sold,
                             sellPrice: row.sellPrice,
+                            pendolariQty: row.pendolariQty,
+                            pendolariPrice: row.pendolariPrice,
                             expectedRevenue: expectedRev
                         };
                     });
@@ -1427,9 +1959,64 @@
                     this.inventoryLogs = this.inventoryLogs.filter(inv => inv.id !== id);
                     this.saveToLocalStorage();
                     this.showNotify('Eliminato', 'Storico inventario rimosso.', 'error');
+                },
+
+                // Print functions
+                printDocLoad(load) {
+                    const items = load.items || [load];
+                    const total = items.reduce((sum, item) => sum + (item.quantity * item.costPrice), 0);
+                    this.printModal = {
+                        open: true,
+                        title: 'DDT - Magazzino Generale',
+                        type: 'DOCUMENTO DI TRASPORTO',
+                        docNumber: load.docNumber,
+                        date: load.date,
+                        destination: 'MAGAZZINO GENERALE',
+                        destinationCity: 'POZZUOLI',
+                        items: items,
+                        totalAmount: total,
+                        showPrices: true
+                    };
+                },
+
+                printTransfer(t) {
+                    const total = t.items.reduce((sum, item) => sum + (item.quantity * item.costPrice), 0);
+                    this.printModal = {
+                        open: true,
+                        title: 'Bolla di Scarico Merce su Barca',
+                        type: 'DOCUMENTO DI TRASPORTO',
+                        docNumber: t.bollaNumber,
+                        date: t.date,
+                        destination: this.getBoatName(t.boatId),
+                        destinationCity: t.destinationCity || 'NAPOLI',
+                        items: t.items,
+                        totalAmount: total,
+                        showPrices: false
+                    };
+                },
+
+                printBoatTransferDoc(bt) {
+                    const total = bt.items.reduce((sum, item) => sum + (item.quantity * item.costPrice), 0);
+                    this.printModal = {
+                        open: true,
+                        title: 'Bolla Trasferimento Tra Barche',
+                        type: 'DOCUMENTO DI TRASPORTO',
+                        docNumber: bt.bollaNumber,
+                        date: bt.date,
+                        destination: this.getBoatName(bt.toBoatId) + ' (DA ' + this.getBoatName(bt.fromBoatId) + ')',
+                        destinationCity: bt.destinationCity || 'NAPOLI',
+                        items: bt.items,
+                        totalAmount: total,
+                        showPrices: false
+                    };
+                },
+
+                triggerPrint() {
+                    window.print();
                 }
             }
         }
     </script>
 </body>
 </html>
+```
