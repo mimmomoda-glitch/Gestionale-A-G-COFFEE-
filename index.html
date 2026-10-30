@@ -1447,11 +1447,21 @@
                         this.saveToLocalStorage();
                     }
 
+                    // Import all 21 requested boats
+                    const initialBoatNames = [
+                        "NAPOLI JET", "SALERNO JET", "AMALFI JET", "SUPER JET", "CAPRI JET", 
+                        "ISCHIA JET", "SUPER FLYTE", "TREMITI JET", "VESUVIO JET", "JUMBO JET", 
+                        "SORRENTO JET", "GIUNONE JET", "EUROPA JET", "CITTÀ DI SORRENTO", "PICASSO", 
+                        "FRECCIA D ARGENTO", "BLIZ", "DELFINO", "URAGANO", "ACQUARIUS", "RAID"
+                    ];
+
                     if (this.boats.length === 0) {
-                        this.boats = [
-                            { id: 'b1', name: 'M/N CAPRI', skipper: 'Mario Rossi', notes: 'Escursioni' },
-                            { id: 'b2', name: 'Barca Stella Maris', skipper: 'Giuseppe Verdi', notes: 'Noleggio e Tour' }
-                        ];
+                        this.boats = initialBoatNames.map((name, idx) => ({
+                            id: 'b_' + (idx + 1),
+                            name: name,
+                            skipper: '',
+                            notes: 'Unità Navale'
+                        }));
                         this.saveToLocalStorage();
                     }
                 },
