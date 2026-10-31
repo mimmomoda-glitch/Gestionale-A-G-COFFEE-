@@ -1,3 +1,7 @@
+<!-- Chosen Palette: Slate & Blue Modern Dark Theme -->
+<!-- Application Structure Plan: Single-page application structured with responsive tab navigation (Dashboard, Prodotti, Magazzino, Barche, Bolle Scarico, Spostamenti, Pendolari, Inventario). Prioritizes quick data entry for boat inventory reconciliation, distinct tracking of central warehouse vs. individual boat stock, and automatic chain calculations from initial stock -> loads -> boat transfers -> physical stock -> cash reconciliation. -->
+<!-- Visualization & Content Choices: Interactive dynamic tables built with Alpine.js and styled via Tailwind CSS; color-coded badges for stock movements (+ green, - red); standard font icons (FontAwesome); no SVG graphics or Mermaid JS used. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 <!DOCTYPE html>
 <html lang="it" class="h-full">
 <head>
@@ -917,7 +921,7 @@
                                 <h3 class="text-lg font-bold text-white flex items-center gap-2">
                                     <i class="fa-solid fa-sailboat text-emerald-400"></i> Barca: <span x-text="getBoatName(selectedBoatForInventory)"></span>
                                 </h3>
-                                <p class="text-xs text-slate-400">Q.tà Teorica = Giacenza Iniziale (da ultimo inv.) + Nuovi carichi/spostamenti arrivati dopo.</p>
+                                <p class="text-xs text-slate-400">Q.tà Teorica Tot. = Giacenza Iniziale + Nuovi Carichi + Spostamenti (Netti).</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-4">
                                 <div>
@@ -935,6 +939,7 @@
                                         <th class="p-3">Prodotto</th>
                                         <th class="p-3 text-center">Giacenza Iniziale</th>
                                         <th class="p-3 text-center">Nuovi Carichi</th>
+                                        <th class="p-3 text-center">Spostamenti</th>
                                         <th class="p-3 text-center">Q.tà Teorica Tot.</th>
                                         <th class="p-3 text-center">Q.tà Fisica (Effe. a bordo)</th>
                                         <th class="p-3 text-center">Consumo Tot.</th>
@@ -950,7 +955,8 @@
                                         <tr>
                                             <td class="p-3 font-semibold text-white" x-text="row.productName"></td>
                                             <td class="p-3 text-center font-semibold text-slate-400" x-text="row.initialQty"></td>
-                                            <td class="p-3 text-center font-medium text-emerald-400" x-text="row.addedQty >= 0 ? '+' + row.addedQty : row.addedQty"></td>
+                                            <td class="p-3 text-center font-medium text-emerald-400" x-text="row.addedQty > 0 ? '+' + row.addedQty : row.addedQty"></td>
+                                            <td class="p-3 text-center font-medium" :class="row.movedQty > 0 ? 'text-emerald-400' : (row.movedQty < 0 ? 'text-red-400' : 'text-slate-400')" x-text="row.movedQty > 0 ? '+' + row.movedQty : row.movedQty"></td>
                                             <td class="p-3 text-center font-bold text-blue-400" x-text="row.theoreticalQty"></td>
                                             <td class="p-3 text-center">
                                                 <input type="number" step="0.01" min="0" x-model.number="row.physicalQty" class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-center text-sm text-white focus:outline-none focus:border-emerald-500 font-bold">
@@ -1059,6 +1065,8 @@
                                         <tr>
                                             <th class="pb-1">Prodotto</th>
                                             <th class="pb-1 text-center">Giacenza Iniziale</th>
+                                            <th class="pb-1 text-center">Nuovi Carichi</th>
+                                            <th class="pb-1 text-center">Spostamenti</th>
                                             <th class="pb-1 text-center">Q.tà Teorica</th>
                                             <th class="pb-1 text-center">Q.tà Fisica (Nuova Iniziale)</th>
                                             <th class="pb-1 text-center">Consumo Tot.</th>
@@ -1071,6 +1079,8 @@
                                             <tr>
                                                 <td class="py-1.5 font-medium text-white" x-text="getProductName(item.productId)"></td>
                                                 <td class="py-1.5 text-center text-slate-400" x-text="item.initialQty || 0"></td>
+                                                <td class="py-1.5 text-center font-medium text-emerald-400" x-text="(item.addedQty || 0) > 0 ? '+' + item.addedQty : (item.addedQty || 0)"></td>
+                                                <td class="py-1.5 text-center font-medium" :class="(item.movedQty || 0) > 0 ? 'text-emerald-400' : ((item.movedQty || 0) < 0 ? 'text-red-400' : 'text-slate-400')" x-text="(item.movedQty || 0) > 0 ? '+' + item.movedQty : (item.movedQty || 0)"></td>
                                                 <td class="py-1.5 text-center text-blue-400" x-text="item.theoreticalQty"></td>
                                                 <td class="py-1.5 text-center font-bold text-emerald-400" x-text="item.physicalQty"></td>
                                                 <td class="py-1.5 text-center font-bold text-amber-400" x-text="item.soldQty !== undefined ? item.soldQty : Math.max(0, item.theoreticalQty - item.physicalQty)"></td>
@@ -2019,10 +2029,11 @@
                     // Trova l'ultimo inventario registrato per la barca selezionata
                     const boatInvs = this.inventoryLogs.filter(inv => inv.boatId === this.selectedBoatForInventory);
                     const lastInventory = boatInvs.length > 0 ? boatInvs[boatInvs.length - 1] : null;
-                    const lastInvTimestamp = lastInventory ? (lastInventory.timestamp || 0) : 0;
+                    const lastInvTimestamp = lastInventory ? (lastInventory.timestamp || new Date(lastInventory.date + 'T23:59:59').getTime()) : 0;
 
                     let initialStockMap = {};
                     let addedStockMap = {};
+                    let movedStockMap = {};
 
                     // 1. CARICA LA GIACENZA INIZIALE (dalla Q.tà Fisica dell'ultimo inventario salvato)
                     if (lastInventory && lastInventory.items) {
@@ -2031,11 +2042,11 @@
                         });
                     }
 
-                    // 2. SOMMA SOLO I CARICHI / BOLLE SCARICATE DOPO L'ULTIMO INVENTARIO
+                    // 2. SOMMA SOLO I CARICHI / BOLLE SCARICATE DAL MAGAZZINO DOPO L'ULTIMO INVENTARIO
                     this.transfers
                         .filter(t => t.boatId === this.selectedBoatForInventory)
                         .forEach(t => {
-                            const tTime = t.timestamp || new Date(t.date).getTime();
+                            const tTime = t.timestamp || new Date(t.date + 'T12:00:00').getTime();
                             if (tTime > lastInvTimestamp) {
                                 t.items.forEach(i => {
                                     addedStockMap[i.productId] = (addedStockMap[i.productId] || 0) + Number(i.quantity);
@@ -2043,26 +2054,25 @@
                             }
                         });
 
-                    // 3. SOMMA SPOSTAMENTI RICEVUTI DOPO L'ULTIMO INVENTARIO (+)
+                    // 3. SEPARATI GLI SPOSTAMENTI TRA BARCHE (Entrati [+] e Usciti [-])
                     this.boatTransfers
                         .filter(bt => bt.toBoatId === this.selectedBoatForInventory)
                         .forEach(bt => {
-                            const btTime = bt.timestamp || new Date(bt.date).getTime();
+                            const btTime = bt.timestamp || new Date(bt.date + 'T12:00:00').getTime();
                             if (btTime > lastInvTimestamp) {
                                 bt.items.forEach(i => {
-                                    addedStockMap[i.productId] = (addedStockMap[i.productId] || 0) + Number(i.quantity);
+                                    movedStockMap[i.productId] = (movedStockMap[i.productId] || 0) + Number(i.quantity);
                                 });
                             }
                         });
 
-                    // 4. SOTTRAI SPOSTAMENTI CEDUTI AD ALTRE BARCHE DOPO L'ULTIMO INVENTARIO (-)
                     this.boatTransfers
                         .filter(bt => bt.fromBoatId === this.selectedBoatForInventory)
                         .forEach(bt => {
-                            const btTime = bt.timestamp || new Date(bt.date).getTime();
+                            const btTime = bt.timestamp || new Date(bt.date + 'T12:00:00').getTime();
                             if (btTime > lastInvTimestamp) {
                                 bt.items.forEach(i => {
-                                    addedStockMap[i.productId] = (addedStockMap[i.productId] || 0) - Number(i.quantity);
+                                    movedStockMap[i.productId] = (movedStockMap[i.productId] || 0) - Number(i.quantity);
                                 });
                             }
                         });
@@ -2072,7 +2082,7 @@
                     this.pendolariSheets
                         .filter(ps => ps.boatId === this.selectedBoatForInventory)
                         .forEach(ps => {
-                            const psTime = ps.timestamp || new Date(ps.date).getTime();
+                            const psTime = ps.timestamp || new Date(ps.date + 'T12:00:00').getTime();
                             if (psTime > lastInvTimestamp) {
                                 ps.items.forEach(i => {
                                     pendolariMap[i.productId] = (pendolariMap[i.productId] || 0) + Number(i.quantity);
@@ -2080,19 +2090,21 @@
                             }
                         });
 
-                    // 5. CALCOLA LA NUOVA GIACENZA TEORICA TOTALE
+                    // 4. CALCOLA LA GIACENZA TEORICA TOTALE
                     this.currentInventoryRows = this.products.map(p => {
                         const initialQty = Number(initialStockMap[p.id] || 0);
                         const addedQty = Number(addedStockMap[p.id] || 0);
-                        const theoreticalQty = Math.max(0, initialQty + addedQty);
+                        const movedQty = Number(movedStockMap[p.id] || 0);
+                        const theoreticalQty = Math.max(0, initialQty + addedQty + movedQty);
                         const pendolariQty = Number(pendolariMap[p.id] || 0);
 
                         return {
                             productId: p.id,
                             productName: p.name,
-                            initialQty: initialQty,          // Giacenza iniziale fissa ereditata
-                            addedQty: addedQty,              // Nuovi carichi/spostamenti netti
-                            theoreticalQty: theoreticalQty,  // Giacenza Teorica (Iniziale + Carichi)
+                            initialQty: initialQty,          // Giacenza iniziale fissa ereditata dall'inventario precedente
+                            addedQty: addedQty,              // Nuovi carichi da magazzino centrale
+                            movedQty: movedQty,              // Spostamenti tra barche (+ entrati, - usciti)
+                            theoreticalQty: theoreticalQty,  // Giacenza Teorica Tot. (Iniziale + Carichi + Spostamenti)
                             physicalQty: theoreticalQty,     // Quantità fisica rilevata (default = teorica)
                             pendolariQty: pendolariQty,
                             pendolariPrice: p.pendolariPrice !== undefined ? p.pendolariPrice : p.costPrice,
@@ -2158,6 +2170,8 @@
                         return {
                             productId: row.productId,
                             initialQty: row.initialQty,
+                            addedQty: row.addedQty,
+                            movedQty: row.movedQty,
                             theoreticalQty: row.theoreticalQty,
                             physicalQty: Number(row.physicalQty || 0), // Questa diverrà la nuova Giacenza Iniziale
                             soldQty: sold,
