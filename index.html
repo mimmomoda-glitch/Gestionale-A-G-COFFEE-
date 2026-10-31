@@ -1,7 +1,3 @@
-<!-- Chosen Palette: Slate & Blue Modern Dark Theme -->
-<!-- Application Structure Plan: Single-page application structured with responsive tab navigation (Dashboard, Prodotti, Magazzino, Barche, Bolle Scarico, Spostamenti, Pendolari, Inventario). Prioritizes quick data entry for boat inventory reconciliation, distinct tracking of central warehouse vs. individual boat stock, and automatic chain calculations from initial stock -> loads -> boat transfers -> physical stock -> cash reconciliation. -->
-<!-- Visualization & Content Choices: Interactive dynamic tables built with Alpine.js and styled via Tailwind CSS; color-coded badges for stock movements (+ green, - red); standard font icons (FontAwesome); no SVG graphics or Mermaid JS used. -->
-<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 <!DOCTYPE html>
 <html lang="it" class="h-full">
 <head>
@@ -52,7 +48,7 @@
                     </div>
                     <div>
                         <h1 class="text-xl font-bold tracking-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Magazzino & Flotta Pro</h1>
-                        <p class="text-xs" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">Gestione Merci, Bolle di Scarico e Inventari a Bordo</p>
+                        <p class="text-xs" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">Gestione Merci, Bolle di Scarico, Pendolari/Equipaggio e Inventari</p>
                     </div>
                 </div>
 
@@ -91,7 +87,7 @@
                         <option value="barche">⛵ Barche</option>
                         <option value="scarichi">📄 Bolle Scarico</option>
                         <option value="spostamenti">🔄 Spostamenti Barche</option>
-                        <option value="pendolari">🎟️ Schede Pendolari</option>
+                        <option value="pendolari">🎟️ Pendolari & Equipaggio</option>
                         <option value="inventari">📋 Inventario</option>
                     </select>
                 </div>
@@ -117,7 +113,7 @@
                         <i class="fa-solid fa-right-left"></i> Spostamenti
                     </button>
                     <button @click="activeTab = 'pendolari'" :class="activeTab === 'pendolari' ? 'bg-blue-600 text-white shadow-md' : (isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-700 hover:text-slate-900 hover:bg-white')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-ticket"></i> Pendolari
+                        <i class="fa-solid fa-ticket"></i> Pendolari & Equipaggio
                     </button>
                     <button @click="activeTab = 'inventari'" :class="activeTab === 'inventari' ? 'bg-blue-600 text-white shadow-md' : (isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-700 hover:text-slate-900 hover:bg-white')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                         <i class="fa-solid fa-clipboard-check"></i> Inventario
@@ -773,15 +769,22 @@
             </div>
         </div>
 
-        <!-- 6.5 SCHEDA PENDOLARI TAB -->
+        <!-- 6.5 SCHEDA PENDOLARI & EQUIPAGGIO TAB -->
         <div x-show="activeTab === 'pendolari'" class="space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Form Registrazione Scheda Pendolari -->
+                <!-- Form Registrazione Scheda Pendolari / Equipaggio -->
                 <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 lg:col-span-1">
                     <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-ticket text-sky-400"></i> Nuova Scheda Pendolari
+                        <i class="fa-solid fa-ticket text-sky-400"></i> Registra Consumi (Pendolari / Equipaggio)
                     </h3>
                     <form @submit.prevent="savePendolariSheet" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Tipo di Scheda / Buono</label>
+                            <select x-model="pendolariForm.sheetType" @change="onSheetTypeChange()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                                <option value="pendolari">🎟️ Scheda Pendolari (Listino Scontato Pass)</option>
+                                <option value="equipaggio">⚓ Buono Consumo Equipaggio (Importi Modificabili)</option>
+                            </select>
+                        </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Data Scheda</label>
                             <input type="date" x-model="pendolariForm.date" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
@@ -796,40 +799,56 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Note / Nome Pendolare / Riferimento</label>
-                            <input type="text" x-model="pendolariForm.notes" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500" placeholder="es. Scheda Giornaliera Pass">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Riferimento / Nome (es. Nome Membro Equipaggio)</label>
+                            <input type="text" x-model="pendolariForm.notes" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500" placeholder="es. Mario Rossi - Turno Mattina">
                         </div>
 
                         <!-- Add Item Row -->
                         <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 space-y-3">
-                            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Prodotti Consumati dai Pendolari</h4>
+                            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider" x-text="pendolariForm.sheetType === 'equipaggio' ? 'Buono Equipaggio - Inserisci Articolo' : 'Scheda Pendolari - Inserisci Articolo'"></h4>
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Prodotto</label>
-                                <select x-model="currentPendolariItem.productId" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                                <select x-model="currentPendolariItem.productId" @change="onPendolariProductSelect()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
                                     <option value="">-- Seleziona prodotto --</option>
                                     <template x-for="p in products" :key="p.id">
-                                        <option :value="p.id" x-text="p.name + ' (P.zo Scontato Pendolari: ' + formatCurrency(p.pendolariPrice !== undefined ? p.pendolariPrice : p.costPrice) + ')'"></option>
+                                        <option :value="p.id" x-text="p.name + ' (Std: ' + formatCurrency(p.sellPrice) + ' / Pass: ' + formatCurrency(p.pendolariPrice !== undefined ? p.pendolariPrice : p.costPrice) + ')'"></option>
                                     </template>
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-xs text-slate-400 mb-1">Quantità Pendolari</label>
-                                <input type="number" step="0.01" min="0.01" x-model.number="currentPendolariItem.quantity" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500" placeholder="0">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Quantità</label>
+                                    <div class="flex items-center gap-1">
+                                        <button type="button" @click="changePendolariQty(-1)" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white font-bold w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow shrink-0">-</button>
+                                        <input type="number" step="1" min="1" x-model.number="currentPendolariItem.quantity" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-center text-base text-white font-bold focus:outline-none focus:border-sky-500" placeholder="1">
+                                        <button type="button" @click="changePendolariQty(1)" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white font-bold w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow shrink-0">+</button>
+                                    </div>
+                                    <!-- Preset buttons -->
+                                    <div class="flex items-center gap-1.5 mt-2">
+                                        <button type="button" @click="setPendolariQtyPreset(1)" class="flex-1 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-bold py-1 rounded-lg">+1</button>
+                                        <button type="button" @click="setPendolariQtyPreset(5)" class="flex-1 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-bold py-1 rounded-lg">+5</button>
+                                        <button type="button" @click="setPendolariQtyPreset(10)" class="flex-1 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-bold py-1 rounded-lg">+10</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Importo Unità (€)</label>
+                                    <input type="number" step="0.01" min="0" x-model.number="currentPendolariItem.customPrice" class="w-full h-10 bg-slate-900 border border-slate-700 rounded-xl px-3 text-base text-white font-bold focus:outline-none focus:border-sky-500 font-bold text-sky-400" placeholder="0.00">
+                                </div>
                             </div>
-                            <button type="button" @click="addPendolariItem()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 rounded-xl text-xs transition">
-                                + Aggiungi alla Scheda
+                            <button type="button" @click="addPendolariItem()" class="w-full bg-slate-700 hover:bg-slate-600 active:scale-98 text-white font-medium py-2.5 rounded-xl text-xs transition shadow flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-plus"></i> Inserisci Prodotto
                             </button>
                         </div>
 
                         <!-- Items List -->
                         <div class="space-y-2">
-                            <h4 class="text-xs font-semibold text-slate-300 uppercase">Articoli in Scheda (<span x-text="pendolariForm.items.length"></span>)</h4>
+                            <h4 class="text-xs font-semibold text-slate-300 uppercase">Articoli nel Documento (<span x-text="pendolariForm.items.length"></span>)</h4>
                             <div class="max-h-36 overflow-y-auto space-y-1">
                                 <template x-for="(item, index) in pendolariForm.items" :key="index">
                                     <div class="flex justify-between items-center bg-slate-900 p-2 rounded-lg text-xs border border-slate-700">
                                         <div>
                                             <span class="font-medium text-white" x-text="getProductName(item.productId)"></span>
-                                            <span class="text-sky-400 ml-2" x-text="'Q.tà: ' + item.quantity + ' @ ' + formatCurrency(item.pendolariPrice)"></span>
+                                            <span class="text-sky-400 ml-2" x-text="'Q.tà: ' + item.quantity + ' @ ' + formatCurrency(item.customPrice)"></span>
                                         </div>
                                         <button type="button" @click="pendolariForm.items.splice(index, 1)" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-xmark"></i></button>
                                     </div>
@@ -838,15 +857,15 @@
                         </div>
 
                         <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-medium py-2.5 rounded-xl text-sm shadow transition">
-                            Registra Scheda Pendolari
+                            Registra Documento (Pendolari / Equipaggio)
                         </button>
                     </form>
                 </div>
 
-                <!-- History of Pendolari Sheets -->
+                <!-- History of Pendolari & Equipaggio Sheets -->
                 <div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 lg:col-span-2">
                     <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-sky-400"></i> Storico Schede Pendolari Registrate
+                        <i class="fa-solid fa-clock-rotate-left text-sky-400"></i> Storico Schede Pendolari e Buoni Equipaggio
                     </h3>
                     <div class="space-y-4 max-h-[600px] overflow-y-auto">
                         <template x-for="ps in pendolariSheets.slice().reverse()" :key="ps.id">
@@ -855,12 +874,13 @@
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <span class="font-bold text-white text-base" x-text="getBoatName(ps.boatId)"></span>
+                                            <span class="text-xs px-2 py-0.5 rounded-full border font-semibold" :class="ps.sheetType === 'equipaggio' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-sky-500/10 text-sky-400 border-sky-500/20'" x-text="ps.sheetType === 'equipaggio' ? 'Buono Equipaggio' : 'Scheda Pendolari'"></span>
                                             <span class="text-xs text-slate-400" x-text="'(' + ps.date + ')'"></span>
                                         </div>
-                                        <div class="text-xs font-semibold text-sky-400 mt-1" x-text="ps.notes || 'Scheda Pendolari'"></div>
+                                        <div class="text-xs font-semibold text-slate-300 mt-1" x-text="ps.notes || 'Nessuna nota specificata'"></div>
                                     </div>
                                     <div class="flex items-center gap-3">
-                                        <span class="text-xs font-bold text-sky-400" x-text="'Totale Pendolari: ' + formatCurrency(getPendolariSheetTotal(ps))"></span>
+                                        <span class="text-xs font-bold text-sky-400" x-text="'Totale: ' + formatCurrency(getPendolariSheetTotal(ps))"></span>
                                         <button @click="deletePendolariSheet(ps.id)" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash"></i></button>
                                     </div>
                                 </div>
@@ -870,8 +890,8 @@
                                             <tr>
                                                 <th class="pb-1">Prodotto</th>
                                                 <th class="pb-1 text-center">Quantità</th>
-                                                <th class="pb-1 text-right">P.zo Pendolari (Scontato)</th>
-                                                <th class="pb-1 text-right">Importo Pendolari</th>
+                                                <th class="pb-1 text-right">Prezzo Applicato</th>
+                                                <th class="pb-1 text-right">Importo Totale</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-slate-800">
@@ -879,8 +899,8 @@
                                                 <tr>
                                                     <td class="py-1.5 font-medium text-white" x-text="getProductName(item.productId)"></td>
                                                     <td class="py-1.5 text-center font-bold text-sky-400" x-text="item.quantity"></td>
-                                                    <td class="py-1.5 text-right" x-text="formatCurrency(item.pendolariPrice)"></td>
-                                                    <td class="py-1.5 text-right font-bold text-sky-400" x-text="formatCurrency(item.quantity * item.pendolariPrice)"></td>
+                                                    <td class="py-1.5 text-right" x-text="formatCurrency(item.customPrice !== undefined ? item.customPrice : item.pendolariPrice)"></td>
+                                                    <td class="py-1.5 text-right font-bold text-sky-400" x-text="formatCurrency(item.quantity * (item.customPrice !== undefined ? item.customPrice : item.pendolariPrice))"></td>
                                                 </tr>
                                             </template>
                                         </tbody>
@@ -889,7 +909,7 @@
                             </div>
                         </template>
                         <template x-if="pendolariSheets.length === 0">
-                            <p class="text-center text-slate-500 py-8">Nessuna scheda pendolari registrata.</p>
+                            <p class="text-center text-slate-500 py-8">Nessun documento registrato.</p>
                         </template>
                     </div>
                 </div>
@@ -943,8 +963,8 @@
                                         <th class="p-3 text-center">Q.tà Teorica Tot.</th>
                                         <th class="p-3 text-center">Q.tà Fisica (Effe. a bordo)</th>
                                         <th class="p-3 text-center">Consumo Tot.</th>
-                                        <th class="p-3 text-center">Q.tà Pendolari</th>
-                                        <th class="p-3 text-right">Incasso Pendolari</th>
+                                        <th class="p-3 text-center">Q.tà Scontata (Pend./Equip.)</th>
+                                        <th class="p-3 text-right">Incasso Scontato</th>
                                         <th class="p-3 text-center">Q.tà Pubblico</th>
                                         <th class="p-3 text-right">Incasso Pubblico</th>
                                         <th class="p-3 text-right">Incasso Atteso Totale</th>
@@ -959,7 +979,11 @@
                                             <td class="p-3 text-center font-medium" :class="row.movedQty > 0 ? 'text-emerald-400' : (row.movedQty < 0 ? 'text-red-400' : 'text-slate-400')" x-text="row.movedQty > 0 ? '+' + row.movedQty : row.movedQty"></td>
                                             <td class="p-3 text-center font-bold text-blue-400" x-text="row.theoreticalQty"></td>
                                             <td class="p-3 text-center">
-                                                <input type="number" step="0.01" min="0" x-model.number="row.physicalQty" class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-center text-sm text-white focus:outline-none focus:border-emerald-500 font-bold">
+                                                <div class="flex items-center justify-center gap-1">
+                                                    <button type="button" @click="row.physicalQty = Math.max(0, Number(row.physicalQty || 0) - 1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold border border-slate-700 flex items-center justify-center text-xs shadow">-</button>
+                                                    <input type="number" step="0.01" min="0" x-model.number="row.physicalQty" class="w-16 bg-slate-900 border border-slate-700 rounded-lg px-1 py-1 text-center text-sm text-white focus:outline-none focus:border-emerald-500 font-bold">
+                                                    <button type="button" @click="row.physicalQty = Number(row.physicalQty || 0) + 1" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold border border-slate-700 flex items-center justify-center text-xs shadow">+</button>
+                                                </div>
                                             </td>
                                             <td class="p-3 text-center font-bold text-amber-400" x-text="getSoldQty(row)"></td>
                                             <td class="p-3 text-center font-bold text-sky-400" x-text="row.pendolariQty || 0"></td>
@@ -980,7 +1004,7 @@
                                 <p class="text-xs text-slate-400 uppercase tracking-wider font-medium">Totale Incasso Atteso (Teorico)</p>
                                 <div class="text-2xl font-black text-blue-400" x-text="formatCurrency(getTotalExpectedRevenue())"></div>
                                 <div class="text-xs text-slate-400 pt-1 space-y-0.5">
-                                    <div class="flex justify-between"><span>Quota Pendolari (Pass/Pen):</span> <strong class="text-sky-400" x-text="formatCurrency(getTotalPendolariRevenue())"></strong></div>
+                                    <div class="flex justify-between"><span>Quota Scontata (Pend./Equip.):</span> <strong class="text-sky-400" x-text="formatCurrency(getTotalPendolariRevenue())"></strong></div>
                                     <div class="flex justify-between"><span>Quota Pubblico (Listino):</span> <strong class="text-emerald-400" x-text="formatCurrency(getTotalPublicRevenue())"></strong></div>
                                 </div>
                             </div>
@@ -1376,6 +1400,7 @@
                 },
 
                 pendolariForm: {
+                    sheetType: 'pendolari',
                     date: new Date().toISOString().split('T')[0],
                     boatId: '',
                     notes: '',
@@ -1384,7 +1409,18 @@
 
                 currentPendolariItem: {
                     productId: '',
-                    quantity: ''
+                    quantity: 1,
+                    customPrice: 0
+                },
+
+                // Helper Stepper methods
+                changePendolariQty(amount) {
+                    const current = Number(this.currentPendolariItem.quantity) || 1;
+                    this.currentPendolariItem.quantity = Math.max(1, current + amount);
+                },
+
+                setPendolariQtyPreset(amount) {
+                    this.currentPendolariItem.quantity = amount;
                 },
 
                 boatTransferForm: {
@@ -1957,29 +1993,56 @@
                     this.showNotify('Eliminato', 'Spostamento tra barche rimosso.', 'error');
                 },
 
-                // Pendolari Sheets Management
+                // Pendolari & Equipaggio Sheets Management
+                onSheetTypeChange() {
+                    if (this.currentPendolariItem.productId) {
+                        this.onPendolariProductSelect();
+                    }
+                },
+
+                onPendolariProductSelect() {
+                    const prod = this.products.find(p => p.id === this.currentPendolariItem.productId);
+                    if (prod) {
+                        if (this.pendolariForm.sheetType === 'equipaggio') {
+                            this.currentPendolariItem.customPrice = prod.sellPrice;
+                        } else {
+                            this.currentPendolariItem.customPrice = prod.pendolariPrice !== undefined ? prod.pendolariPrice : prod.costPrice;
+                        }
+                    }
+                },
+
                 addPendolariItem() {
                     if (!this.currentPendolariItem.productId || !this.currentPendolariItem.quantity) {
                         this.showNotify('Attenzione', 'Seleziona un prodotto e una quantità valida.', 'error');
                         return;
                     }
                     const prod = this.products.find(p => p.id === this.currentPendolariItem.productId);
+                    const defaultPrice = this.pendolariForm.sheetType === 'equipaggio' 
+                        ? (prod ? prod.sellPrice : 0)
+                        : (prod ? (prod.pendolariPrice !== undefined ? prod.pendolariPrice : prod.costPrice) : 0);
+
+                    const priceToUse = (this.currentPendolariItem.customPrice !== undefined && this.currentPendolariItem.customPrice !== '') 
+                        ? Number(this.currentPendolariItem.customPrice) 
+                        : defaultPrice;
+
                     this.pendolariForm.items.push({
                         productId: this.currentPendolariItem.productId,
-                        quantity: this.currentPendolariItem.quantity,
-                        pendolariPrice: prod ? (prod.pendolariPrice !== undefined ? prod.pendolariPrice : prod.sellPrice) : 0
+                        quantity: Number(this.currentPendolariItem.quantity),
+                        customPrice: priceToUse,
+                        pendolariPrice: priceToUse
                     });
                     this.currentPendolariItem.productId = '';
-                    this.currentPendolariItem.quantity = '';
+                    this.currentPendolariItem.quantity = 1;
+                    this.currentPendolariItem.customPrice = 0;
                 },
 
                 savePendolariSheet() {
                     if (!this.pendolariForm.boatId) {
-                        this.showNotify('Attenzione', 'Seleziona la barca a cui associare la scheda pendolari.', 'error');
+                        this.showNotify('Attenzione', 'Seleziona la barca a cui associare il documento.', 'error');
                         return;
                     }
                     if (this.pendolariForm.items.length === 0) {
-                        this.showNotify('Attenzione', 'Inserisci almeno un articolo nella scheda pendolari.', 'error');
+                        this.showNotify('Attenzione', 'Inserisci almeno un articolo nel documento.', 'error');
                         return;
                     }
 
@@ -1992,7 +2055,7 @@
 
                     this.pendolariSheets.push(newSheet);
                     this.saveToLocalStorage();
-                    this.showNotify('Scheda Registrata', 'Scheda pendolari salvata con successo.');
+                    this.showNotify('Documento Registrato', 'Scheda salvata con successo.');
 
                     this.pendolariForm.notes = '';
                     this.pendolariForm.items = [];
@@ -2003,13 +2066,13 @@
                 },
 
                 getPendolariSheetTotal(ps) {
-                    return ps.items.reduce((sum, i) => sum + (i.quantity * i.pendolariPrice), 0);
+                    return ps.items.reduce((sum, i) => sum + (i.quantity * (i.customPrice !== undefined ? i.customPrice : (i.pendolariPrice || 0))), 0);
                 },
 
                 deletePendolariSheet(id) {
                     this.pendolariSheets = this.pendolariSheets.filter(ps => ps.id !== id);
                     this.saveToLocalStorage();
-                    this.showNotify('Eliminata', 'Scheda pendolari rimossa.', 'error');
+                    this.showNotify('Eliminata', 'Scheda rimossa.', 'error');
 
                     if (this.selectedBoatForInventory) {
                         this.loadBoatInventoryData();
@@ -2077,8 +2140,9 @@
                             }
                         });
 
-                    // Mappa anche l'uso pendolari registrato dopo l'ultimo inventario
+                    // Mappa anche l'uso pendolari/equipaggio registrato dopo l'ultimo inventario
                     let pendolariMap = {};
+                    let pendolariRevMap = {};
                     this.pendolariSheets
                         .filter(ps => ps.boatId === this.selectedBoatForInventory)
                         .forEach(ps => {
@@ -2086,6 +2150,8 @@
                             if (psTime > lastInvTimestamp) {
                                 ps.items.forEach(i => {
                                     pendolariMap[i.productId] = (pendolariMap[i.productId] || 0) + Number(i.quantity);
+                                    const itemPrice = i.customPrice !== undefined ? i.customPrice : (i.pendolariPrice || 0);
+                                    pendolariRevMap[i.productId] = (pendolariRevMap[i.productId] || 0) + (Number(i.quantity) * Number(itemPrice));
                                 });
                             }
                         });
@@ -2097,16 +2163,18 @@
                         const movedQty = Number(movedStockMap[p.id] || 0);
                         const theoreticalQty = Math.max(0, initialQty + addedQty + movedQty);
                         const pendolariQty = Number(pendolariMap[p.id] || 0);
+                        const explicitPendolariRev = Number(pendolariRevMap[p.id] || 0);
 
                         return {
                             productId: p.id,
                             productName: p.name,
-                            initialQty: initialQty,          // Giacenza iniziale fissa ereditata dall'inventario precedente
-                            addedQty: addedQty,              // Nuovi carichi da magazzino centrale
-                            movedQty: movedQty,              // Spostamenti tra barche (+ entrati, - usciti)
-                            theoreticalQty: theoreticalQty,  // Giacenza Teorica Tot. (Iniziale + Carichi + Spostamenti)
-                            physicalQty: theoreticalQty,     // Quantità fisica rilevata (default = teorica)
+                            initialQty: initialQty,          
+                            addedQty: addedQty,              
+                            movedQty: movedQty,              
+                            theoreticalQty: theoreticalQty,  
+                            physicalQty: theoreticalQty,     
                             pendolariQty: pendolariQty,
+                            explicitPendolariRev: explicitPendolariRev,
                             pendolariPrice: p.pendolariPrice !== undefined ? p.pendolariPrice : p.costPrice,
                             sellPrice: p.sellPrice
                         };
@@ -2130,6 +2198,10 @@
                 },
 
                 getPendolariRevenueRow(row) {
+                    if (row.explicitPendolariRev !== undefined && row.explicitPendolariRev > 0 && row.pendolariQty > 0) {
+                        const proportion = Math.min(1, this.getEffectivePendolariQty(row) / row.pendolariQty);
+                        return row.explicitPendolariRev * proportion;
+                    }
                     return this.getEffectivePendolariQty(row) * Number(row.pendolariPrice || 0);
                 },
 
@@ -2173,7 +2245,7 @@
                             addedQty: row.addedQty,
                             movedQty: row.movedQty,
                             theoreticalQty: row.theoreticalQty,
-                            physicalQty: Number(row.physicalQty || 0), // Questa diverrà la nuova Giacenza Iniziale
+                            physicalQty: Number(row.physicalQty || 0), 
                             soldQty: sold,
                             sellPrice: row.sellPrice,
                             pendolariQty: row.pendolariQty,
