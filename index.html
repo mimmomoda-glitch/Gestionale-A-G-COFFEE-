@@ -898,7 +898,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
                         <h2 class="text-xl font-bold text-white">Inventario, Incassi e Riscontro Finale</h2>
-                        <p class="text-xs text-slate-400">Scomposizione automatica tra la merce usata dai pendolari (a prezzo scontato Pass/Pen) e la vendita standard al pubblico.</p>
+                        <p class="text-xs text-slate-400">Le quantità fisiche effettive registrate in questo inventario diventeranno la giacenza iniziale per i successivi conteggi.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <select x-model="selectedBoatForInventory" @change="loadBoatInventoryData()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
@@ -917,7 +917,7 @@
                                 <h3 class="text-lg font-bold text-white flex items-center gap-2">
                                     <i class="fa-solid fa-sailboat text-emerald-400"></i> Barca: <span x-text="getBoatName(selectedBoatForInventory)"></span>
                                 </h3>
-                                <p class="text-xs text-slate-400">Conteggio automatico delle quote pendolari al prezzo agevolato e del pubblico al prezzo pieno di listino.</p>
+                                <p class="text-xs text-slate-400">Giacenza teorica calcolata a partire dalle giacenze effettive dell'ultimo inventario chiuso + movimenti recenti.</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-4">
                                 <div>
@@ -933,8 +933,8 @@
                                 <thead class="bg-slate-900 text-xs uppercase text-slate-400 border-b border-slate-700">
                                     <tr>
                                         <th class="p-3">Prodotto</th>
-                                        <th class="p-3 text-center">Q.tà Teorica</th>
-                                        <th class="p-3 text-center">Q.tà Fisica</th>
+                                        <th class="p-3 text-center">Q.tà Teorica (Iniziale + Carichi)</th>
+                                        <th class="p-3 text-center">Q.tà Fisica (Effe. a bordo)</th>
                                         <th class="p-3 text-center">Consumo Tot.</th>
                                         <th class="p-3 text-center">Q.tà Pendolari</th>
                                         <th class="p-3 text-right">Incasso Pendolari (P.zo Scontato)</th>
@@ -995,7 +995,7 @@
                         <!-- Save Button -->
                         <div class="flex justify-end pt-2">
                             <button @click="saveInventoryRecord()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-3 rounded-xl text-sm shadow transition flex items-center gap-2">
-                                <i class="fa-solid fa-floppy-disk"></i> Registra Inventario e Incassi Barca
+                                <i class="fa-solid fa-floppy-disk"></i> Registra Inventario e Imposta Nuove Quantità Iniziali
                             </button>
                         </div>
                     </div>
@@ -1055,7 +1055,7 @@
                                         <tr>
                                             <th class="pb-1">Prodotto</th>
                                             <th class="pb-1 text-center">Q.tà Teorica</th>
-                                            <th class="pb-1 text-center">Q.tà Rilevata</th>
+                                            <th class="pb-1 text-center">Q.tà Rilevata (Iniziale Succ.)</th>
                                             <th class="pb-1 text-center">Consumo Tot.</th>
                                             <th class="pb-1 text-right">P.zo Vendita</th>
                                             <th class="pb-1 text-right">Valore Atteso</th>
@@ -1066,7 +1066,7 @@
                                             <tr>
                                                 <td class="py-1.5 font-medium text-white" x-text="getProductName(item.productId)"></td>
                                                 <td class="py-1.5 text-center text-slate-400" x-text="item.theoreticalQty"></td>
-                                                <td class="py-1.5 text-center font-bold" x-text="item.physicalQty"></td>
+                                                <td class="py-1.5 text-center font-bold text-emerald-400" x-text="item.physicalQty"></td>
                                                 <td class="py-1.5 text-center font-bold text-amber-400" x-text="item.soldQty !== undefined ? item.soldQty : Math.max(0, item.theoreticalQty - item.physicalQty)"></td>
                                                 <td class="py-1.5 text-right" x-text="formatCurrency(item.sellPrice)"></td>
                                                 <td class="py-1.5 text-right font-bold text-emerald-400" x-text="formatCurrency(item.expectedRevenue !== undefined ? item.expectedRevenue : (item.financialDiff || 0))"></td>
@@ -2006,39 +2006,51 @@
 
                     this.actualRevenueInput = 0;
 
+                    // Recupera l'ultimo inventario registrato per questa barca per usarne i valori fisici come giacenza iniziale
+                    const boatInvs = this.inventoryLogs.filter(inv => inv.boatId === this.selectedBoatForInventory);
+                    const lastInventory = boatInvs.length > 0 ? boatInvs[boatInvs.length - 1] : null;
+                    const lastInvDate = lastInventory ? lastInventory.date : '2000-01-01';
+
                     let loadedMap = {};
                     
-                    // Add direct transfers from central warehouse
+                    // Se esiste un inventario precedente, impostiamo le quantità fisiche di allora come base teorica di partenza
+                    if (lastInventory && lastInventory.items) {
+                        lastInventory.items.forEach(item => {
+                            loadedMap[item.productId] = Number(item.physicalQty || 0);
+                        });
+                    }
+
+                    // Aggiungiamo i scarichi dal magazzino avvenuti DOPO la data dell'ultimo inventario
                     this.transfers
-                        .filter(t => t.boatId === this.selectedBoatForInventory)
+                        .filter(t => t.boatId === this.selectedBoatForInventory && t.date >= lastInvDate)
                         .forEach(t => {
                             t.items.forEach(i => {
                                 loadedMap[i.productId] = (loadedMap[i.productId] || 0) + Number(i.quantity);
                             });
                         });
 
-                    // Add transfers RECEIVED from other boats (+)
+                    // Aggiungiamo i trasferimenti RICEVUTI da altre barche dopo l'ultimo inventario
                     this.boatTransfers
-                        .filter(bt => bt.toBoatId === this.selectedBoatForInventory)
+                        .filter(bt => bt.toBoatId === this.selectedBoatForInventory && bt.date >= lastInvDate)
                         .forEach(bt => {
                             bt.items.forEach(i => {
                                 loadedMap[i.productId] = (loadedMap[i.productId] || 0) + Number(i.quantity);
                             });
                         });
 
-                    // Subtract transfers SENT to other boats (-)
+                    // Sottraiamo i trasferimenti INVIATI ad altre barche dopo l'ultimo inventario
                     this.boatTransfers
-                        .filter(bt => bt.fromBoatId === this.selectedBoatForInventory)
+                        .filter(bt => bt.fromBoatId === this.selectedBoatForInventory && bt.date >= lastInvDate)
                         .forEach(bt => {
                             bt.items.forEach(i => {
                                 loadedMap[i.productId] = (loadedMap[i.productId] || 0) - Number(i.quantity);
                             });
                         });
 
-                    // Map pendolari quantities used by this boat
+                    // Mappiamo l'utilizzo dei pendolari registrato dopo l'ultimo inventario
                     let pendolariMap = {};
                     this.pendolariSheets
-                        .filter(ps => ps.boatId === this.selectedBoatForInventory)
+                        .filter(ps => ps.boatId === this.selectedBoatForInventory && ps.date >= lastInvDate)
                         .forEach(ps => {
                             ps.items.forEach(i => {
                                 pendolariMap[i.productId] = (pendolariMap[i.productId] || 0) + Number(i.quantity);
@@ -2138,7 +2150,7 @@
 
                     this.inventoryLogs.push(newInventoryLog);
                     this.saveToLocalStorage();
-                    this.showNotify('Inventario e Cassa Registrati', 'Riscontro salvato con successo. Calcolato plus/ammanco incassi.');
+                    this.showNotify('Inventario e Cassa Registrati', 'Riscontro salvato. Le quantità effettive rilevate sono ora impostate come nuova giacenza iniziale per i prossimi conteggi.');
                     this.selectedBoatForInventory = '';
                     this.currentInventoryRows = [];
                     this.actualRevenueInput = 0;
