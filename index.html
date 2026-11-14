@@ -18,18 +18,32 @@
         body { font-family: 'Inter', sans-serif; }
         [x-cloak] { display: none !important; }
         @media print {
-            body * {
-                visibility: hidden;
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
             }
-            #printable-area, #printable-area *,
-            #printable-inventory-area, #printable-inventory-area * {
-                visibility: visible;
+            html, body {
+                height: auto !important;
+                overflow: visible !important;
+                background: #fff !important;
+                color: #000 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-modal-wrapper {
+                position: static !important;
+                display: block !important;
+                background: transparent !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                backdrop-filter: none !important;
             }
             #printable-area, #printable-inventory-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
+                position: static !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 color: #000 !important;
                 background: #fff !important;
                 box-shadow: none !important;
@@ -37,8 +51,22 @@
                 padding: 0 !important;
                 margin: 0 !important;
             }
-            .no-print {
-                display: none !important;
+            table {
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            thead {
+                display: table-header-group;
+            }
+            tfoot {
+                display: table-footer-group;
+            }
+            .print-avoid-break {
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
         }
     </style>
@@ -967,7 +995,7 @@
                             <div class="flex flex-wrap items-center gap-4">
                                 <div>
                                     <label class="text-xs text-slate-400 block mb-1">Data Inventario</label>
-                                    <input type="date" x-model="inventoryDate" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                                    <input type="date" x-model="inventoryDate" @change="saveDraftState()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                                 </div>
                             </div>
                         </div>
@@ -1034,7 +1062,7 @@
                             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between">
                                 <div>
                                     <label class="text-xs text-emerald-400 uppercase tracking-wider font-semibold block mb-1">Totale Incasso Reale (Cassa / POS) (€)</label>
-                                    <input type="number" step="0.01" min="0" x-model.number="actualRevenueInput" class="w-full bg-slate-900 border border-emerald-500/50 rounded-xl px-3 py-2 text-lg text-white font-bold focus:outline-none focus:border-emerald-400" placeholder="0.00">
+                                    <input type="number" step="0.01" min="0" x-model.number="actualRevenueInput" @input="saveDraftState()" class="w-full bg-slate-900 border border-emerald-500/50 rounded-xl px-3 py-2 text-lg text-white font-bold focus:outline-none focus:border-emerald-400" placeholder="0.00">
                                 </div>
                                 <p class="text-xs text-slate-500 mt-1">Digita l'incasso effettivo consegnato dal mezzo.</p>
                             </div>
@@ -1359,7 +1387,7 @@
     </div>
 
     <!-- MODAL PRINT VIEW (DDT / BOLLE) -->
-    <div x-show="printModal.open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto" x-cloak>
+    <div x-show="printModal.open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto print-modal-wrapper" x-cloak>
         <div class="bg-white text-slate-900 rounded-none max-w-3xl w-full p-8 shadow-2xl border border-slate-300 font-sans text-xs" id="printable-area">
             
             <!-- Header Grid -->
@@ -1517,8 +1545,8 @@
     </div>
 
     <!-- MODAL PRINT & EXPORT INVENTARIO (PDF / STAMPA / EXCEL) -->
-    <div x-show="inventoryPrintModal.open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto" x-cloak>
-        <div class="bg-white text-slate-900 rounded-xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-slate-300 font-sans text-xs my-auto" id="printable-inventory-area">
+    <div x-show="inventoryPrintModal.open" class="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto print-modal-wrapper" x-cloak>
+        <div class="bg-white text-slate-900 rounded-xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-slate-300 font-sans text-xs my-4" id="printable-inventory-area">
             
             <!-- Top Action Bar (No Print) -->
             <div class="flex flex-wrap justify-between items-center gap-3 pb-4 mb-5 border-b border-slate-200 no-print">
@@ -1563,7 +1591,7 @@
             </div>
 
             <!-- Tabella Dettaglio Inventario -->
-            <div class="mb-5">
+            <div class="mb-4">
                 <table class="w-full text-left text-[11px] border-collapse border border-slate-800">
                     <thead>
                         <tr class="bg-slate-900 text-white font-bold uppercase text-[10px]">
@@ -1595,34 +1623,70 @@
                             </tr>
                         </template>
                     </tbody>
+                    <tfoot>
+                        <tr class="bg-slate-200 text-slate-900 font-black border-t-2 border-slate-900 text-[11px]">
+                            <td class="p-2 border-r border-slate-400 uppercase">TOTALI COLONNE</td>
+                            <td class="p-2 border-r border-slate-400 text-center" x-text="getPrintInventoryTotals().initialQty"></td>
+                            <td class="p-2 border-r border-slate-400 text-center" x-text="(getPrintInventoryTotals().addedQty > 0 ? '+' : '') + getPrintInventoryTotals().addedQty"></td>
+                            <td class="p-2 border-r border-slate-400 text-center" x-text="(getPrintInventoryTotals().movedQty > 0 ? '+' : '') + getPrintInventoryTotals().movedQty"></td>
+                            <td class="p-2 border-r border-slate-400 text-center" x-text="getPrintInventoryTotals().theoreticalQty"></td>
+                            <td class="p-2 border-r border-slate-400 text-center bg-slate-300" x-text="getPrintInventoryTotals().physicalQty"></td>
+                            <td class="p-2 border-r border-slate-400 text-center" x-text="getPrintInventoryTotals().soldQty"></td>
+                            <td class="p-2 border-r border-slate-400 text-center" x-text="getPrintInventoryTotals().pendolariQty"></td>
+                            <td class="p-2 border-r border-slate-400 text-right">-</td>
+                            <td class="p-2 text-right font-black text-xs" x-text="formatCurrency(inventoryPrintModal.data?.expectedRevenue || 0)"></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
 
-            <!-- Riepilogo Economico e Riscontro Cassa -->
-            <div class="grid grid-cols-3 gap-3 border-2 border-slate-900 p-3 bg-slate-50 mb-6">
-                <div class="border-r border-slate-300 pr-3">
-                    <span class="text-[10px] font-bold uppercase text-slate-500 block">Totale Incasso Atteso</span>
-                    <span class="text-base font-black text-slate-900" x-text="formatCurrency(inventoryPrintModal.data?.expectedRevenue || 0)"></span>
-                </div>
-                <div class="border-r border-slate-300 pr-3">
-                    <span class="text-[10px] font-bold uppercase text-slate-500 block">Totale Incasso Reale (Cassa/POS)</span>
-                    <span class="text-base font-black text-slate-900" x-text="formatCurrency(inventoryPrintModal.data?.actualRevenue || 0)"></span>
-                </div>
-                <div>
-                    <span class="text-[10px] font-bold uppercase text-slate-500 block">Differenza (Plus / Ammanco)</span>
-                    <span class="text-base font-black" :class="(inventoryPrintModal.data?.cashDiff || 0) >= 0 ? 'text-emerald-700' : 'text-red-700'" x-text="formatCurrency(inventoryPrintModal.data?.cashDiff || 0)"></span>
-                </div>
-            </div>
+            <!-- Riepilogo Economico, Totali, Plus e Ammanchi (protetto da interruzione pagina) -->
+            <div class="print-avoid-break mt-4 space-y-4">
+                <div class="border-2 border-slate-900 bg-slate-50">
+                    <div class="bg-slate-900 text-white px-3 py-1.5 font-black uppercase text-[11px] tracking-wider flex justify-between items-center">
+                        <span>Riepilogo Totali & Riscontro Cassa (Plus / Ammanchi)</span>
+                        <span x-text="inventoryPrintModal.data?.boatName"></span>
+                    </div>
 
-            <!-- Firme -->
-            <div class="grid grid-cols-2 gap-8 pt-4 text-[10px] font-bold text-slate-700">
-                <div>
-                    <p class="mb-6 uppercase">Firma Responsabile / Barista di Bordo:</p>
-                    <div class="border-b border-slate-800"></div>
+                    <!-- Dettaglio incassi teorici per fascia -->
+                    <div class="grid grid-cols-2 border-b border-slate-300 text-[11px] bg-white">
+                        <div class="p-2.5 border-r border-slate-300 flex justify-between items-center">
+                            <span class="font-semibold text-slate-600 uppercase">Quota Vendite Pubblico (Listino):</span>
+                            <span class="font-bold text-slate-900" x-text="formatCurrency(getPrintInventoryTotals().publicRevenue)"></span>
+                        </div>
+                        <div class="p-2.5 flex justify-between items-center">
+                            <span class="font-semibold text-slate-600 uppercase">Quota Scontata (Pendolari / Equipaggio):</span>
+                            <span class="font-bold text-slate-900" x-text="formatCurrency(getPrintInventoryTotals().pendolariRevenue)"></span>
+                        </div>
+                    </div>
+
+                    <!-- Totali Principali e Risultato Finale -->
+                    <div class="grid grid-cols-3">
+                        <div class="p-3 border-r border-slate-400">
+                            <span class="text-[10px] font-bold uppercase text-slate-600 block">Totale Incasso Atteso</span>
+                            <span class="text-lg font-black text-slate-900 mt-0.5 block" x-text="formatCurrency(inventoryPrintModal.data?.expectedRevenue || 0)"></span>
+                        </div>
+                        <div class="p-3 border-r border-slate-400">
+                            <span class="text-[10px] font-bold uppercase text-slate-600 block">Totale Incasso Reale (Cassa/POS)</span>
+                            <span class="text-lg font-black text-slate-900 mt-0.5 block" x-text="formatCurrency(inventoryPrintModal.data?.actualRevenue || 0)"></span>
+                        </div>
+                        <div class="p-3" :class="(inventoryPrintModal.data?.cashDiff || 0) >= 0 ? 'bg-emerald-50' : 'bg-red-50'">
+                            <span class="text-[10px] font-black uppercase block" :class="(inventoryPrintModal.data?.cashDiff || 0) >= 0 ? 'text-emerald-800' : 'text-red-800'" x-text="(inventoryPrintModal.data?.cashDiff || 0) > 0 ? 'PLUSVALENZA DI CASSA (+)' : ((inventoryPrintModal.data?.cashDiff || 0) < 0 ? 'AMMANCO DI CASSA (-)' : 'PAREGGIO CASSA (0,00 €)')"></span>
+                            <span class="text-lg font-black mt-0.5 block" :class="(inventoryPrintModal.data?.cashDiff || 0) >= 0 ? 'text-emerald-700' : 'text-red-700'" x-text="((inventoryPrintModal.data?.cashDiff || 0) > 0 ? '+' : '') + formatCurrency(inventoryPrintModal.data?.cashDiff || 0)"></span>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <p class="mb-6 uppercase">Firma Controllo Magazzino / Amministrazione:</p>
-                    <div class="border-b border-slate-800"></div>
+
+                <!-- Firme -->
+                <div class="grid grid-cols-2 gap-8 pt-4 text-[10px] font-bold text-slate-800">
+                    <div>
+                        <p class="mb-7 uppercase">Firma Responsabile / Barista di Bordo:</p>
+                        <div class="border-b border-slate-800"></div>
+                    </div>
+                    <div>
+                        <p class="mb-7 uppercase">Firma Controllo Magazzino / Amministrazione:</p>
+                        <div class="border-b border-slate-800"></div>
+                    </div>
                 </div>
             </div>
 
@@ -2069,7 +2133,7 @@
                 },
 
                 // ==========================================
-                // NUOVE FUNZIONI EXCEL (.xlsx) E STAMPA / PDF
+                // FUNZIONI EXCEL (.xlsx) E STAMPA / PDF
                 // ==========================================
 
                 buildInventoryPayloadFromCurrent() {
@@ -2085,6 +2149,8 @@
                         pendolariQty: Number(row.pendolariQty || 0),
                         pendolariPrice: Number(row.pendolariPrice || 0),
                         sellPrice: Number(row.sellPrice || 0),
+                        pendolariRevenue: this.getPendolariRevenueRow(row),
+                        publicRevenue: this.getPublicRevenueRow(row),
                         expectedRevenue: this.getExpectedRevenueRow(row)
                     }));
 
@@ -2100,20 +2166,33 @@
                 },
 
                 buildInventoryPayloadFromSaved(inv) {
-                    const items = (inv.items || []).map(item => ({
-                        productId: item.productId,
-                        productName: this.getProductName(item.productId),
-                        initialQty: Number(item.initialQty || 0),
-                        addedQty: Number(item.addedQty || 0),
-                        movedQty: Number(item.movedQty || 0),
-                        theoreticalQty: Number(item.theoreticalQty || 0),
-                        physicalQty: Number(item.physicalQty || 0),
-                        soldQty: item.soldQty !== undefined ? Number(item.soldQty) : Math.max(0, Number(item.theoreticalQty || 0) - Number(item.physicalQty || 0)),
-                        pendolariQty: Number(item.pendolariQty || 0),
-                        pendolariPrice: Number(item.pendolariPrice || 0),
-                        sellPrice: Number(item.sellPrice || 0),
-                        expectedRevenue: item.expectedRevenue !== undefined ? Number(item.expectedRevenue) : Number(item.financialDiff || 0)
-                    }));
+                    const items = (inv.items || []).map(item => {
+                        const sold = item.soldQty !== undefined ? Number(item.soldQty) : Math.max(0, Number(item.theoreticalQty || 0) - Number(item.physicalQty || 0));
+                        const effPend = Math.min(sold, Number(item.pendolariQty || 0));
+                        const pubSold = Math.max(0, sold - effPend);
+                        const pendPrice = Number(item.pendolariPrice || 0);
+                        const sPrice = Number(item.sellPrice || 0);
+                        const expRev = item.expectedRevenue !== undefined ? Number(item.expectedRevenue) : Number(item.financialDiff || 0);
+                        const pendRev = effPend * pendPrice;
+                        const pubRev = Math.max(0, expRev - pendRev) || (pubSold * sPrice);
+
+                        return {
+                            productId: item.productId,
+                            productName: this.getProductName(item.productId),
+                            initialQty: Number(item.initialQty || 0),
+                            addedQty: Number(item.addedQty || 0),
+                            movedQty: Number(item.movedQty || 0),
+                            theoreticalQty: Number(item.theoreticalQty || 0),
+                            physicalQty: Number(item.physicalQty || 0),
+                            soldQty: sold,
+                            pendolariQty: Number(item.pendolariQty || 0),
+                            pendolariPrice: pendPrice,
+                            sellPrice: sPrice,
+                            pendolariRevenue: pendRev,
+                            publicRevenue: pubRev,
+                            expectedRevenue: expRev
+                        };
+                    });
 
                     return {
                         boatId: inv.boatId,
@@ -2151,6 +2230,34 @@
                     );
                 },
 
+                getPrintInventoryTotals() {
+                    const items = this.getFilteredPrintInventoryItems();
+                    return items.reduce((acc, item) => {
+                        acc.initialQty += Number(item.initialQty || 0);
+                        acc.addedQty += Number(item.addedQty || 0);
+                        acc.movedQty += Number(item.movedQty || 0);
+                        acc.theoreticalQty += Number(item.theoreticalQty || 0);
+                        acc.physicalQty += Number(item.physicalQty || 0);
+                        acc.soldQty += Number(item.soldQty || 0);
+                        acc.pendolariQty += Number(item.pendolariQty || 0);
+                        acc.pendolariRevenue += Number(item.pendolariRevenue || 0);
+                        acc.publicRevenue += Number(item.publicRevenue || 0);
+                        acc.expectedRevenue += Number(item.expectedRevenue || 0);
+                        return acc;
+                    }, {
+                        initialQty: 0,
+                        addedQty: 0,
+                        movedQty: 0,
+                        theoreticalQty: 0,
+                        physicalQty: 0,
+                        soldQty: 0,
+                        pendolariQty: 0,
+                        pendolariRevenue: 0,
+                        publicRevenue: 0,
+                        expectedRevenue: 0
+                    });
+                },
+
                 generateExcelFromPayload(payload) {
                     if (typeof XLSX === 'undefined') {
                         this.showNotify('Errore Libreria', 'Libreria Excel non caricata. Controlla la connessione internet.', 'error');
@@ -2177,7 +2284,17 @@
                         ]
                     ];
 
+                    let totInit = 0, totAdd = 0, totMov = 0, totTheo = 0, totPhys = 0, totSold = 0, totPend = 0;
+
                     payload.items.forEach(item => {
+                        totInit += item.initialQty;
+                        totAdd += item.addedQty;
+                        totMov += item.movedQty;
+                        totTheo += item.theoreticalQty;
+                        totPhys += item.physicalQty;
+                        totSold += item.soldQty;
+                        totPend += item.pendolariQty;
+
                         sheetRows.push([
                             item.productName,
                             item.initialQty,
@@ -2192,15 +2309,30 @@
                         ]);
                     });
 
+                    sheetRows.push([
+                        "TOTALI",
+                        totInit,
+                        totAdd,
+                        totMov,
+                        totTheo,
+                        totPhys,
+                        totSold,
+                        totPend,
+                        "",
+                        Number(payload.expectedRevenue.toFixed(2))
+                    ]);
+
                     sheetRows.push([]);
-                    sheetRows.push(["RIEPILOGO ECONOMICO E RISCONTRO CASSA"]);
+                    sheetRows.push(["RIEPILOGO ECONOMICO, PLUS E AMMANCHI"]);
                     sheetRows.push(["Totale Incasso Atteso (€):", Number(payload.expectedRevenue.toFixed(2))]);
                     sheetRows.push(["Totale Incasso Reale (Cassa/POS) (€):", Number(payload.actualRevenue.toFixed(2))]);
-                    sheetRows.push(["Differenza Cassa (Plus / Ammanco) (€):", Number(payload.cashDiff.toFixed(2))]);
+                    sheetRows.push([
+                        payload.cashDiff >= 0 ? "PLUSVALENZA DI CASSA (€):" : "AMMANCO DI CASSA (€):",
+                        Number(payload.cashDiff.toFixed(2))
+                    ]);
 
                     const ws = XLSX.utils.aoa_to_sheet(sheetRows);
 
-                    // Larghezza colonne ottimizzata per stampa/lettura
                     ws['!cols'] = [
                         { wch: 28 },
                         { wch: 16 },
@@ -2250,7 +2382,7 @@
                     const summaryRows = [
                         ["STORICO GENERALE INVENTARI - " + this.companyDetails.name],
                         [],
-                        ["Data", "Barca", "Incasso Atteso (€)", "Incasso Reale (€)", "Riscontro Cassa (€)"]
+                        ["Data", "Barca", "Incasso Atteso (€)", "Incasso Reale (€)", "Plus / Ammanco (€)"]
                     ];
 
                     this.inventoryLogs.forEach(inv => {
@@ -2785,6 +2917,7 @@
                             sellPrice: p.sellPrice
                         };
                     });
+                    this.saveDraftState();
                 },
 
                 getSoldQty(row) {
