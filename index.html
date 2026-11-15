@@ -108,8 +108,6 @@
         <!-- 1. DASHBOARD UFFICIO & MAGAZZINO CENTRALE                                 -->
         <!-- ========================================================================= -->
         <div x-show="activeTab === 'dashboard'" class="space-y-4">
-            
-            <!-- Banner Benvenuto Ufficio -->
             <div :class="isDarkMode ? 'bg-gradient-to-r from-blue-900/40 via-slate-900 to-slate-900 border-slate-800' : 'bg-gradient-to-r from-blue-50 via-white to-white border-slate-200'" class="border p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm">
                 <div>
                     <h2 class="text-base sm:text-lg font-black text-white">Ufficio Centrale & Magazzino Pro 🏢</h2>
@@ -125,7 +123,7 @@
                 </div>
             </div>
 
-            <!-- KPI Ufficio (4 Colonne) -->
+            <!-- KPI Ufficio -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border p-4 rounded-2xl">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Valore Totale Magazzino (Costo)</p>
@@ -145,10 +143,7 @@
                 </div>
             </div>
 
-            <!-- Sezione Avvisi & Ultimi DDT Ufficio -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                
-                <!-- Prodotti in Scorta Critica -->
                 <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-4 lg:col-span-6 space-y-3">
                     <h3 class="text-sm font-black flex items-center gap-2 text-red-400">
                         <i class="fa-solid fa-triangle-exclamation"></i> Prodotti in Esaurimento (&le; 5 Pz in Magazzino)
@@ -169,7 +164,6 @@
                     </div>
                 </div>
 
-                <!-- Ultime Bolle / DDT inseriti -->
                 <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-4 lg:col-span-6 space-y-3">
                     <h3 class="text-sm font-black flex items-center gap-2 text-blue-400">
                         <i class="fa-solid fa-clock-rotate-left"></i> Ultimi DDT & Fatture Registrate dall'Ufficio
@@ -191,17 +185,14 @@
                         </template>
                     </div>
                 </div>
-
             </div>
         </div>
 
         <!-- ========================================================================= -->
-        <!-- 2. MAGAZZINO GENERALE (CARICO DDT & GIACENZE)                             -->
+        <!-- 2. MAGAZZINO GENERALE                                                     -->
         <!-- ========================================================================= -->
         <div x-show="activeTab === 'magazzino'" class="space-y-4">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                
-                <!-- Form Carico DDT / Fattura -->
                 <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-4 lg:col-span-5 space-y-3">
                     <h2 class="text-base font-extrabold flex items-center gap-2">
                         <i class="fa-solid fa-truck-ramp-box text-blue-400"></i> Carica DDT / Fattura in Magazzino
@@ -218,13 +209,11 @@
                         </div>
                     </div>
 
-                    <!-- Selettore Modalità: Multiplo Veloce vs Singolo -->
                     <div class="flex gap-1.5 border-b border-slate-800/60 pb-2">
                         <button type="button" @click="loadInputMode = 'multi'" :class="loadInputMode === 'multi' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'" class="flex-1 py-1.5 rounded-xl text-[11px] font-bold transition">⚡ Multiplo Veloce</button>
                         <button type="button" @click="loadInputMode = 'single'" :class="loadInputMode === 'single' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'" class="flex-1 py-1.5 rounded-xl text-[11px] font-bold transition">1. Singolo Prodotto</button>
                     </div>
 
-                    <!-- MODALITÀ MULTIPLO VELOCE -->
                     <div x-show="loadInputMode === 'multi'" :class="isDarkMode ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-50 border-slate-200'" class="p-3 rounded-xl border space-y-2">
                         <div class="flex items-center gap-2">
                             <input type="text" x-model="searchFilter.multiLoad" placeholder="🔍 Filtra prodotto..." :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="border rounded-lg px-2.5 py-1.5 text-xs flex-1">
@@ -241,7 +230,6 @@
                         <button type="button" @click="addAllMultiLoadItems()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl text-xs transition">⚡ Inserisci Tutti nel DDT</button>
                     </div>
 
-                    <!-- MODALITÀ SINGOLO -->
                     <div x-show="loadInputMode === 'single'" :class="isDarkMode ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-50 border-slate-200'" class="p-3 rounded-xl border space-y-2.5">
                         <select x-model="currentLoadItem.productId" @change="onSelectSingleLoadProduct()" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border rounded-xl px-2.5 py-2 text-xs font-bold">
                             <option value="">-- Seleziona Prodotto --</option>
@@ -256,7 +244,6 @@
                         <button type="button" @click="addLoadItem()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-xl text-xs font-bold">+ Aggiungi alla lista DDT</button>
                     </div>
 
-                    <!-- Lista Articoli Pronti nel DDT -->
                     <div class="space-y-1.5 max-h-36 overflow-y-auto">
                         <template x-for="(item, idx) in loadForm.items" :key="idx">
                             <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'" class="flex justify-between items-center p-2 rounded-xl border text-xs">
@@ -271,7 +258,6 @@
                     </button>
                 </div>
 
-                <!-- Giacenze Magazzino Generale -->
                 <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-4 lg:col-span-7 space-y-3">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                         <h2 class="text-base font-extrabold flex items-center gap-2">
@@ -299,7 +285,6 @@
         <!-- 3. FLOTTA BARCHE & OPERAZIONI                                             -->
         <!-- ========================================================================= -->
         <div x-show="activeTab === 'flotta'" class="space-y-4">
-            
             <div class="flex items-center gap-2">
                 <div class="relative flex-1">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
@@ -311,42 +296,50 @@
             </div>
 
             <!-- Griglia Barche -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <template x-for="b in filteredBoats" :key="b.id">
-                    <div :class="isDarkMode ? 'bg-slate-900 border-slate-800 hover:border-emerald-500/50' : 'bg-white border-slate-200 hover:border-emerald-400'" class="border rounded-2xl p-3.5 shadow-sm flex flex-col justify-between gap-3 transition">
+                    <div :class="isDarkMode ? 'bg-slate-900 border-slate-800 hover:border-emerald-500/50' : 'bg-white border-slate-200 hover:border-emerald-400'" class="border-2 rounded-2xl p-4 shadow-md flex flex-col justify-between gap-4 transition">
                         <div class="flex items-start justify-between gap-2">
-                            <div @click="openBoatHub(b.id, 'inventario')" class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
-                                <div class="bg-emerald-500/15 text-emerald-400 p-2.5 rounded-xl border border-emerald-500/20 shrink-0">
-                                    <i class="fa-solid fa-sailboat text-lg"></i>
+                            <div @click="openBoatHub(b.id, 'inventario')" class="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
+                                <div class="bg-emerald-500/20 text-emerald-400 p-3.5 rounded-2xl border border-emerald-500/30 shrink-0 shadow-inner">
+                                    <i class="fa-solid fa-sailboat text-xl"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <h3 class="font-extrabold text-sm sm:text-base truncate" x-text="b.name"></h3>
-                                    <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
-                                        <span>A bordo: <strong class="text-sky-400" x-text="getBoatTotalItemsCount(b.id) + ' pz'"></strong></span>
+                                    <h3 class="font-black text-sm sm:text-base tracking-wide truncate" x-text="b.name"></h3>
+                                    <div class="flex items-center gap-2 text-xs text-slate-400 mt-1">
+                                        <span>A bordo: <strong class="text-sky-400 font-black text-xs sm:text-sm" x-text="getBoatTotalItemsCount(b.id) + ' pz'"></strong></span>
                                         <span>•</span>
-                                        <span>Inv: <strong class="text-slate-300" x-text="getLastInventoryDate(b.id)"></strong></span>
+                                        <span>Inv: <strong class="text-slate-300 font-semibold" x-text="getLastInventoryDate(b.id)"></strong></span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-1 shrink-0">
-                                <button @click="editBoat(b)" class="text-slate-400 hover:text-blue-400 p-1.5" title="Modifica"><i class="fa-solid fa-pen text-xs"></i></button>
-                                <button @click="deleteBoat(b.id)" class="text-slate-400 hover:text-red-400 p-1.5" title="Elimina"><i class="fa-solid fa-trash text-xs"></i></button>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button @click="editBoat(b)" class="bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-blue-400 p-2.5 rounded-xl transition shadow" title="Modifica"><i class="fa-solid fa-pen text-xs"></i></button>
+                                <button @click="deleteBoat(b.id)" class="bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-red-400 p-2.5 rounded-xl transition shadow" title="Elimina"><i class="fa-solid fa-trash text-xs"></i></button>
                             </div>
                         </div>
 
-                        <!-- 4 Pulsanti Azione Rapida (+ Inventario, Carico, Buoni/Pen, Sposta) -->
-                        <div class="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-800/60">
-                            <button @click="openBoatHub(b.id, 'inventario')" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 py-2 px-1 rounded-xl text-[10px] sm:text-xs font-extrabold flex flex-col sm:flex-row items-center justify-center gap-1 transition">
-                                <i class="fa-solid fa-clipboard-check"></i><span>Inventario</span>
+                        <!-- 4 PULSANTI BARCA GRANDI, NUMERATI E ALTAMENTE VISIBILI -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-800/80">
+                            <button @click="openBoatHub(b.id, 'inventario')" class="group relative bg-emerald-600 hover:bg-emerald-500 text-white py-3 px-2 rounded-xl font-black text-xs sm:text-sm shadow-md flex flex-col items-center justify-center gap-1 transition transform active:scale-95">
+                                <span class="absolute top-1 left-2 text-[10px] font-extrabold text-emerald-200/80">1</span>
+                                <i class="fa-solid fa-clipboard-check text-base sm:text-lg text-white"></i>
+                                <span class="tracking-tight">Inventario</span>
                             </button>
-                            <button @click="openBoatHub(b.id, 'scarico')" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 py-2 px-1 rounded-xl text-[10px] sm:text-xs font-extrabold flex flex-col sm:flex-row items-center justify-center gap-1 transition">
-                                <i class="fa-solid fa-truck-ramp-box"></i><span>Carico</span>
+                            <button @click="openBoatHub(b.id, 'scarico')" class="group relative bg-purple-600 hover:bg-purple-500 text-white py-3 px-2 rounded-xl font-black text-xs sm:text-sm shadow-md flex flex-col items-center justify-center gap-1 transition transform active:scale-95">
+                                <span class="absolute top-1 left-2 text-[10px] font-extrabold text-purple-200/80">2</span>
+                                <i class="fa-solid fa-truck-ramp-box text-base sm:text-lg text-white"></i>
+                                <span class="tracking-tight">Carico</span>
                             </button>
-                            <button @click="openBoatHub(b.id, 'pendolari')" class="bg-sky-600/20 hover:bg-sky-600/30 text-sky-400 border border-sky-500/30 py-2 px-1 rounded-xl text-[10px] sm:text-xs font-extrabold flex flex-col sm:flex-row items-center justify-center gap-1 transition">
-                                <i class="fa-solid fa-ticket"></i><span>Buoni/Pen</span>
+                            <button @click="openBoatHub(b.id, 'pendolari')" class="group relative bg-sky-600 hover:bg-sky-500 text-white py-3 px-2 rounded-xl font-black text-xs sm:text-sm shadow-md flex flex-col items-center justify-center gap-1 transition transform active:scale-95">
+                                <span class="absolute top-1 left-2 text-[10px] font-extrabold text-sky-200/80">3</span>
+                                <i class="fa-solid fa-ticket text-base sm:text-lg text-white"></i>
+                                <span class="tracking-tight">Buoni/Pen</span>
                             </button>
-                            <button @click="openBoatHub(b.id, 'spostamento')" class="bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-500/30 py-2 px-1 rounded-xl text-[10px] sm:text-xs font-extrabold flex flex-col sm:flex-row items-center justify-center gap-1 transition">
-                                <i class="fa-solid fa-right-left"></i><span>Sposta</span>
+                            <button @click="openBoatHub(b.id, 'spostamento')" class="group relative bg-amber-600 hover:bg-amber-500 text-white py-3 px-2 rounded-xl font-black text-xs sm:text-sm shadow-md flex flex-col items-center justify-center gap-1 transition transform active:scale-95">
+                                <span class="absolute top-1 left-2 text-[10px] font-extrabold text-amber-200/80">4</span>
+                                <i class="fa-solid fa-right-left text-base sm:text-lg text-white"></i>
+                                <span class="tracking-tight">Sposta</span>
                             </button>
                         </div>
                     </div>
@@ -355,14 +348,14 @@
         </div>
 
         <!-- ========================================================================= -->
-        <!-- 4. LISTINO PRODOTTI & PREZZI                                              -->
+        <!-- 4. LISTINO PRODOTTI                                                       -->
         <!-- ========================================================================= -->
         <div x-show="activeTab === 'prodotti'" class="space-y-4">
             <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-4 space-y-3">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                         <h2 class="text-base font-extrabold">Listino Prodotti & Prezzi (60 Articoli)</h2>
-                        <p class="text-[11px] text-slate-400">Costo, Prezzo Pendolari (Pass) e Prezzo Pubblico.</p>
+                        <p class="text-[11px] text-slate-400">Costo, Prezzo Pendolari e Prezzo Pubblico.</p>
                     </div>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <input type="text" x-model="searchFilter.products" placeholder="🔍 Cerca articolo..." :class="isDarkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-300'" class="border rounded-xl px-3 py-2 text-xs flex-1 sm:w-52">
@@ -392,7 +385,7 @@
         </div>
 
         <!-- ========================================================================= -->
-        <!-- 5. STORICO DOCUMENTI, BOLLE & INVENTARI                                   -->
+        <!-- 5. STORICO DOCUMENTI                                                      -->
         <!-- ========================================================================= -->
         <div x-show="activeTab === 'storico'" class="space-y-4">
             <div class="flex flex-wrap gap-1.5">
@@ -403,7 +396,6 @@
                 <button @click="historySubTab = 'buoni'" :class="historySubTab === 'buoni' ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold">🎟️ Buoni/Pendolari (<span x-text="pendolariSheets.length"></span>)</button>
             </div>
 
-            <!-- Storico Inventari -->
             <div x-show="historySubTab === 'inventari'" class="space-y-3">
                 <div class="flex justify-between items-center">
                     <input type="text" x-model="searchFilter.inventories" placeholder="🔍 Filtra per barca o data..." :class="isDarkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-300'" class="border rounded-xl px-3 py-2 text-xs w-64">
@@ -431,7 +423,6 @@
                 </template>
             </div>
 
-            <!-- Storico Bolle Barche -->
             <div x-show="historySubTab === 'bolle'" class="space-y-2.5">
                 <template x-for="t in transfers.slice().reverse()" :key="t.id">
                     <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-3.5 flex justify-between items-center">
@@ -447,7 +438,6 @@
                 </template>
             </div>
 
-            <!-- Storico DDT Magazzino -->
             <div x-show="historySubTab === 'ddt'" class="space-y-2.5">
                 <template x-for="l in warehouseLoads.slice().reverse()" :key="l.id">
                     <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-3.5 flex justify-between items-center">
@@ -463,7 +453,6 @@
                 </template>
             </div>
 
-            <!-- Storico Spostamenti -->
             <div x-show="historySubTab === 'spostamenti'" class="space-y-2.5">
                 <template x-for="bt in boatTransfers.slice().reverse()" :key="bt.id">
                     <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-3.5 flex justify-between items-center">
@@ -479,7 +468,6 @@
                 </template>
             </div>
 
-            <!-- Storico Buoni & Pendolari -->
             <div x-show="historySubTab === 'buoni'" class="space-y-2.5">
                 <template x-for="ps in pendolariSheets.slice().reverse()" :key="ps.id">
                     <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-3.5 flex justify-between items-center">
@@ -536,28 +524,40 @@
                         </template>
                     </select>
                 </div>
-                <button @click="boatHub.open = false" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0">
-                    Chiudi <i class="fa-solid fa-xmark ml-1"></i>
+                <button @click="boatHub.open = false" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5">
+                    <span>Chiudi</span> <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
 
-            <!-- 4 Tab nel Modale Barca -->
-            <div class="grid grid-cols-4 gap-1 p-2 border-b border-slate-800 bg-slate-950/50 shrink-0">
-                <button @click="boatHub.tab = 'inventario'" :class="boatHub.tab === 'inventario' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'" class="py-2 px-1 rounded-xl text-[10px] sm:text-xs font-extrabold transition flex items-center justify-center gap-1">
-                    <i class="fa-solid fa-clipboard-check"></i><span>1. Inventario</span>
+            <!-- 4 TAB NEL MODALE BARCA (GRANDI, COLORATI, NUMERATI E MOLTO VISIBILI) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border-b border-slate-800 bg-slate-950/85 shrink-0">
+                <!-- 1. Inventario -->
+                <button @click="boatHub.tab = 'inventario'" :class="boatHub.tab === 'inventario' ? 'bg-emerald-600 ring-4 ring-emerald-400/40 text-white shadow-lg' : 'bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-900/60'" class="relative py-3 px-3 rounded-2xl font-black text-xs sm:text-sm transition flex items-center justify-center gap-2">
+                    <span class="absolute top-1 left-2.5 text-[10px] font-black opacity-80">1.</span>
+                    <i class="fa-solid fa-clipboard-check text-base"></i>
+                    <span>Inventario</span>
                 </button>
-                <button @click="boatHub.tab = 'scarico'" :class="boatHub.tab === 'scarico' ? 'bg-purple-600 text-white shadow' : 'text-slate-400 hover:text-white'" class="py-2 px-1 rounded-xl text-[10px] sm:text-xs font-extrabold transition flex items-center justify-center gap-1">
-                    <i class="fa-solid fa-truck-ramp-box"></i><span>2. Carico</span>
+                <!-- 2. Carico -->
+                <button @click="boatHub.tab = 'scarico'" :class="boatHub.tab === 'scarico' ? 'bg-purple-600 ring-4 ring-purple-400/40 text-white shadow-lg' : 'bg-purple-950/70 border border-purple-500/30 text-purple-300 hover:bg-purple-900/60'" class="relative py-3 px-3 rounded-2xl font-black text-xs sm:text-sm transition flex items-center justify-center gap-2">
+                    <span class="absolute top-1 left-2.5 text-[10px] font-black opacity-80">2.</span>
+                    <i class="fa-solid fa-truck-ramp-box text-base"></i>
+                    <span>Carico</span>
                 </button>
-                <button @click="boatHub.tab = 'pendolari'" :class="boatHub.tab === 'pendolari' ? 'bg-sky-600 text-white shadow' : 'text-slate-400 hover:text-white'" class="py-2 px-1 rounded-xl text-[10px] sm:text-xs font-extrabold transition flex items-center justify-center gap-1">
-                    <i class="fa-solid fa-ticket"></i><span>3. Buoni/Pen</span>
+                <!-- 3. Buoni/Pen -->
+                <button @click="boatHub.tab = 'pendolari'" :class="boatHub.tab === 'pendolari' ? 'bg-sky-600 ring-4 ring-sky-400/40 text-white shadow-lg' : 'bg-sky-950/70 border border-sky-500/30 text-sky-300 hover:bg-sky-900/60'" class="relative py-3 px-3 rounded-2xl font-black text-xs sm:text-sm transition flex items-center justify-center gap-2">
+                    <span class="absolute top-1 left-2.5 text-[10px] font-black opacity-80">3.</span>
+                    <i class="fa-solid fa-ticket text-base"></i>
+                    <span>Buoni/Pen</span>
                 </button>
-                <button @click="boatHub.tab = 'spostamento'" :class="boatHub.tab === 'spostamento' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'" class="py-2 px-1 rounded-xl text-[10px] sm:text-xs font-extrabold transition flex items-center justify-center gap-1">
-                    <i class="fa-solid fa-right-left"></i><span>4. Sposta</span>
+                <!-- 4. Sposta -->
+                <button @click="boatHub.tab = 'spostamento'" :class="boatHub.tab === 'spostamento' ? 'bg-amber-600 ring-4 ring-amber-400/40 text-white shadow-lg' : 'bg-amber-950/70 border border-amber-500/30 text-amber-300 hover:bg-amber-900/60'" class="relative py-3 px-3 rounded-2xl font-black text-xs sm:text-sm transition flex items-center justify-center gap-2">
+                    <span class="absolute top-1 left-2.5 text-[10px] font-black opacity-80">4.</span>
+                    <i class="fa-solid fa-right-left text-base"></i>
+                    <span>Sposta</span>
                 </button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4">
+            <div class="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4">
 
                 <!-- TAB 1: INVENTARIO -->
                 <div x-show="boatHub.tab === 'inventario'" class="space-y-3">
@@ -581,7 +581,6 @@
                                         <div class="text-[10px] text-slate-400 flex flex-wrap gap-x-2">
                                             <span>Iniz: <strong x-text="row.initialQty"></strong></span>
                                             <span class="text-emerald-400">Car: <strong x-text="row.addedQty > 0 ? '+' + row.addedQty : row.addedQty"></strong></span>
-                                            <span class="text-amber-400">Spost: <strong x-text="row.movedQty > 0 ? '+' + row.movedQty : row.movedQty"></strong></span>
                                             <span class="text-blue-400 font-bold">Teor: <strong x-text="row.theoreticalQty"></strong></span>
                                         </div>
                                     </div>
@@ -591,19 +590,11 @@
                                         <button type="button" @click="row.physicalQty = Number(row.physicalQty || 0) + 1; saveDraftState()" class="w-8 h-8 rounded-xl bg-slate-800 text-white font-black text-sm">+</button>
                                     </div>
                                 </div>
-                                <div class="flex justify-between items-center pt-1.5 border-t border-slate-800/60 text-[10px]">
-                                    <div class="flex gap-2">
-                                        <span class="text-amber-400 font-bold">Vend: <span x-text="getSoldQty(row)"></span></span>
-                                        <span class="text-sky-400 font-bold" x-show="row.pendolariQty > 0">Pend/Buoni: <span x-text="row.pendolariQty"></span></span>
-                                        <span class="text-slate-400">Pub: <span x-text="getPublicSoldQty(row)"></span></span>
-                                    </div>
-                                    <span class="text-emerald-400 font-extrabold">Atteso: <span x-text="formatCurrency(getExpectedRevenueRow(row))"></span></span>
-                                </div>
                             </div>
                         </template>
                     </div>
 
-                    <!-- Vista Desktop Foglio di Calcolo Inventario -->
+                    <!-- Vista Desktop Inventario -->
                     <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-300'" class="hidden md:block border rounded-2xl overflow-hidden shadow-sm">
                         <div class="max-h-[44vh] overflow-y-auto">
                             <table class="w-full text-left text-xs border-collapse">
@@ -736,63 +727,85 @@
                     <button type="button" @click="createTransferFromHub()" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl text-xs font-extrabold shadow-lg">
                         <i class="fa-solid fa-check mr-1"></i> Conferma Bolla di Carico su Barca
                     </button>
-
-                    <div class="pt-3 border-t border-slate-800/80 space-y-2">
-                        <h4 class="text-[11px] font-extrabold uppercase text-purple-400">Ultime Bolle Caricate su questa Barca</h4>
-                        <template x-for="t in getBoatSpecificTransfers(boatHub.boatId)" :key="t.id">
-                            <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'" class="p-2.5 rounded-xl border flex justify-between items-center text-xs">
-                                <div>
-                                    <span class="font-bold" x-text="t.bollaNumber + ' (' + t.date + ')'"></span>
-                                    <span class="text-[10px] text-slate-400 block" x-text="t.items.length + ' articoli caricati'"></span>
-                                </div>
-                                <button @click="printTransfer(t)" class="bg-purple-600/20 text-purple-400 border border-purple-500/30 px-2.5 py-1 rounded-lg font-bold text-[11px]"><i class="fa-solid fa-print mr-1"></i>Stampa</button>
-                            </div>
-                        </template>
-                    </div>
                 </div>
 
-                <!-- TAB 3: BUONI & PENDOLARI -->
-                <div x-show="boatHub.tab === 'pendolari'" class="space-y-3">
-                    <div class="grid grid-cols-2 gap-2">
-                        <select x-model="pendolariForm.sheetType" @change="onSheetTypeChange()" :class="isDarkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-100 border-slate-300'" class="border rounded-xl px-2.5 py-2 text-xs font-bold">
-                            <option value="pendolari">🎟️ Scheda Pendolari (Pass)</option>
-                            <option value="equipaggio">⚓ Buono Equipaggio e Ponte Comandante (0€)</option>
-                        </select>
-                        <input type="text" x-model="pendolariForm.notes" :class="isDarkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-100 border-slate-300'" class="border rounded-xl px-2.5 py-2 text-xs" placeholder="Note / Nome">
+                <!-- TAB 3: SCHEDA PENDOLARI & EQUIPAGGIO -->
+                <div x-show="boatHub.tab === 'pendolari'" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" @click="pendolariForm.sheetType = 'pendolari'; onSheetTypeChange()" :class="pendolariForm.sheetType === 'pendolari' ? 'bg-sky-600 border-sky-400 text-white shadow-lg shadow-sky-500/20' : (isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-300 text-slate-600')" class="border-2 rounded-2xl p-3.5 flex flex-col items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-ticket text-xl"></i>
+                            <span class="font-black text-xs sm:text-sm">Scheda Pendolari</span>
+                        </button>
+                        <button type="button" @click="pendolariForm.sheetType = 'equipaggio'; onSheetTypeChange()" :class="pendolariForm.sheetType === 'equipaggio' ? 'bg-amber-600 border-amber-400 text-white shadow-lg shadow-amber-500/20' : (isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-300 text-slate-600')" class="border-2 rounded-2xl p-3.5 flex flex-col items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-anchor text-xl"></i>
+                            <span class="font-black text-xs sm:text-sm text-center">Equipaggio / Comando</span>
+                        </button>
                     </div>
 
-                    <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'" class="p-3 rounded-2xl border space-y-2.5">
-                        <select x-model="currentPendolariItem.productId" @change="onPendolariProductSelect()" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border rounded-xl px-3 py-2 text-xs font-bold">
-                            <option value="">-- Seleziona Voce --</option>
-                            <template x-for="p in getGroupedSelectableProducts()" :key="p.id">
-                                <option :value="p.id" x-text="p.name"></option>
+                    <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'" class="border rounded-2xl p-4 space-y-3 shadow-inner">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-extrabold uppercase text-slate-400 mb-1">Seleziona Articolo</label>
+                                <select x-model="currentPendolariItem.productId" @change="onPendolariProductSelect()" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border-2 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-bold focus:border-sky-500 focus:outline-none">
+                                    <option value="">-- Scegli prodotto --</option>
+                                    <template x-for="p in getGroupedSelectableProducts()" :key="p.id">
+                                        <option :value="p.id" x-text="p.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[11px] font-extrabold uppercase text-slate-400 mb-1">Quantità</label>
+                                    <div class="flex items-center gap-1">
+                                        <button type="button" @click="changePendolariQty(-1)" class="w-9 h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-black text-sm">-</button>
+                                        <input type="number" min="1" x-model.number="currentPendolariItem.quantity" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border-2 rounded-xl text-center font-black text-xs sm:text-sm h-10">
+                                        <button type="button" @click="changePendolariQty(1)" class="w-9 h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-black text-sm">+</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-extrabold uppercase text-slate-400 mb-1">Prezzo Unità €</label>
+                                    <input type="number" step="0.01" min="0" x-model.number="currentPendolariItem.customPrice" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-sky-400' : 'bg-white border-slate-300'" class="w-full border-2 rounded-xl text-center font-black text-xs sm:text-sm h-10 px-2" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-extrabold uppercase text-slate-400 mb-1">Note / Nominativo / Riferimento</label>
+                            <input type="text" x-model="pendolariForm.notes" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border-2 rounded-xl px-3 py-2 text-xs font-bold" placeholder="es. Mario Rossi / Servizio Ponte Comando">
+                        </div>
+
+                        <button type="button" @click="addPendolariItem()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-extrabold text-xs sm:text-sm shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus-circle text-sky-400"></i> Aggiungi alla Scheda
+                        </button>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-400">Articoli Inseriti nel Documento</h4>
+                        <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                            <template x-for="(item, idx) in pendolariForm.items" :key="idx">
+                                <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'" class="flex justify-between items-center p-3 rounded-2xl border text-xs">
+                                    <div>
+                                        <span class="font-extrabold text-sm block" x-text="getProductName(item.productId)"></span>
+                                        <span class="text-slate-400 text-[11px]" x-text="item.quantity + ' pz × ' + formatCurrency(item.customPrice) + ' = ' + formatCurrency(item.quantity * item.customPrice)"></span>
+                                    </div>
+                                    <button type="button" @click="pendolariForm.items.splice(idx, 1); saveDraftState()" class="text-red-400 hover:text-red-300 p-2"><i class="fa-solid fa-trash text-sm"></i></button>
+                                </div>
                             </template>
-                        </select>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="flex items-center gap-1">
-                                <button type="button" @click="changePendolariQty(-1)" class="w-9 h-9 bg-slate-800 text-white rounded-xl font-black">-</button>
-                                <input type="number" min="1" x-model.number="currentPendolariItem.quantity" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border rounded-xl text-center font-black text-xs py-2">
-                                <button type="button" @click="changePendolariQty(1)" class="w-9 h-9 bg-slate-800 text-white rounded-xl font-black">+</button>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <input type="number" step="0.01" min="0" x-model.number="currentPendolariItem.customPrice" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-sky-400' : 'bg-white border-slate-300'" class="w-full border rounded-xl text-center font-black text-xs py-2" placeholder="Prezzo €">
-                                <button type="button" @click="addPendolariItem()" class="bg-sky-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shrink-0">+</button>
-                            </div>
+                            <template x-if="pendolariForm.items.length === 0">
+                                <p class="text-xs text-slate-500 py-6 text-center italic">Nessun articolo aggiunto in questa scheda.</p>
+                            </template>
                         </div>
                     </div>
 
-                    <div class="space-y-1.5 max-h-36 overflow-y-auto">
-                        <template x-for="(item, idx) in pendolariForm.items" :key="idx">
-                            <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="flex justify-between items-center p-2 rounded-xl border text-xs">
-                                <span class="font-bold truncate" x-text="getProductName(item.productId) + ' • ' + item.quantity + ' pz @ ' + formatCurrency(item.customPrice)"></span>
-                                <button type="button" @click="pendolariForm.items.splice(idx, 1); saveDraftState()" class="text-red-400 px-2"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
-                        </template>
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-slate-800">
+                        <div>
+                            <span class="text-xs text-slate-400 block font-bold uppercase">Totale Documento</span>
+                            <span class="text-xl font-black text-sky-400" x-text="formatCurrency(getPendolariSheetTotal(pendolariForm))"></span>
+                        </div>
+                        <button type="button" @click="savePendolariSheetFromHub()" class="w-full sm:w-auto bg-sky-600 hover:bg-sky-500 text-white px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-xl transition">
+                            <i class="fa-solid fa-floppy-disk mr-1.5"></i> Salva e Registra Documento
+                        </button>
                     </div>
-
-                    <button type="button" @click="savePendolariSheetFromHub()" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-3 rounded-xl text-xs font-extrabold shadow-lg">
-                        <i class="fa-solid fa-check mr-1"></i> Registra Buono / Scheda Pendolari
-                    </button>
                 </div>
 
                 <!-- TAB 4: SPOSTAMENTO -->
@@ -912,7 +925,7 @@
         </div>
     </div>
 
-    <!-- MODAL STAMPA DDT / BOLLE (SENZA PREZZI) -->
+    <!-- MODAL STAMPA DDT / BOLLE -->
     <template x-if="printModal.open">
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto print-modal-wrapper">
             <div class="bg-white text-slate-900 rounded-none max-w-3xl w-full p-8 shadow-2xl border border-slate-300 font-sans text-xs" id="printable-area">
@@ -974,15 +987,6 @@
                             </template>
                         </tbody>
                     </table>
-                    <div class="border-t border-slate-800 flex justify-between items-center p-2 bg-slate-50 font-bold text-sm">
-                        <span>TOTALE €</span>
-                        <span></span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-8 pt-6 text-[10px] font-bold text-slate-800">
-                    <div><p class="mb-6">FIRMA CONDUCENTE / MITTENTE</p><div class="border-b border-slate-800"></div></div>
-                    <div><p class="mb-6">FIRMA DESTINATARIO</p><div class="border-b border-slate-800"></div></div>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 mt-4 no-print">
@@ -1050,23 +1054,6 @@
                         </template>
                     </tbody>
                 </table>
-
-                <div class="print-avoid-break border-2 border-slate-900 bg-slate-50">
-                    <div class="grid grid-cols-3">
-                        <div class="p-3 border-r border-slate-400">
-                            <span class="text-[10px] font-bold uppercase text-slate-600 block">Totale Incasso Atteso</span>
-                            <span class="text-lg font-black text-slate-900" x-text="formatCurrency(inventoryPrintModal.data?.expectedRevenue || 0)"></span>
-                        </div>
-                        <div class="p-3 border-r border-slate-400">
-                            <span class="text-[10px] font-bold uppercase text-slate-600 block">Totale Incasso Reale</span>
-                            <span class="text-lg font-black text-slate-900" x-text="formatCurrency(inventoryPrintModal.data?.actualRevenue || 0)"></span>
-                        </div>
-                        <div class="p-3" :class="(inventoryPrintModal.data?.cashDiff || 0) >= 0 ? 'bg-emerald-50' : 'bg-red-50'">
-                            <span class="text-[10px] font-black uppercase block">Plus / Ammanco Cassa</span>
-                            <span class="text-lg font-black" :class="(inventoryPrintModal.data?.cashDiff || 0) >= 0 ? 'text-emerald-700' : 'text-red-700'" x-text="formatCurrency(inventoryPrintModal.data?.cashDiff || 0)"></span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </template>
@@ -1096,14 +1083,7 @@
                 multiBoatTransferQuantities: {},
 
                 searchFilter: {
-                    products: '',
-                    warehouse: '',
-                    boats: '',
-                    inventories: '',
-                    hubProducts: '',
-                    multiLoad: '',
-                    multiTransfer: '',
-                    multiBoatTransfer: ''
+                    products: '', warehouse: '', boats: '', inventories: '', hubProducts: '', multiLoad: '', multiTransfer: '', multiBoatTransfer: ''
                 },
 
                 companyDetails: {
@@ -1150,12 +1130,10 @@
                 getGroupInfoForProduct(productId) {
                     return this.productGroups.find(g => g.groupId === productId || g.memberIds.includes(productId)) || null;
                 },
-
                 getNormalizedGroupId(productId) {
                     const grp = this.getGroupInfoForProduct(productId);
                     return grp ? grp.groupId : productId;
                 },
-
                 getGroupedSelectableProducts() {
                     const result = [];
                     const addedGroups = new Set();
@@ -1184,7 +1162,6 @@
                     const savedBoatTransfers = localStorage.getItem('gest_boat_transfers');
                     const savedPendolari = localStorage.getItem('gest_pendolari');
                     const savedInventories = localStorage.getItem('gest_inventories');
-                    const savedDrafts = localStorage.getItem('gest_drafts');
 
                     if (savedProducts) this.products = JSON.parse(savedProducts);
                     if (savedLoads) this.warehouseLoads = JSON.parse(savedLoads);
@@ -1194,17 +1171,7 @@
                     if (savedPendolari) this.pendolariSheets = JSON.parse(savedPendolari);
                     if (savedInventories) this.inventoryLogs = JSON.parse(savedInventories);
 
-                    if (savedDrafts) {
-                        try {
-                            const d = JSON.parse(savedDrafts);
-                            if (d.loadForm) this.loadForm = d.loadForm;
-                            if (d.transferForm) this.transferForm = d.transferForm;
-                            if (d.boatTransferForm) this.boatTransferForm = d.boatTransferForm;
-                            if (d.pendolariForm) this.pendolariForm = d.pendolariForm;
-                        } catch (e) {}
-                    }
-
-                    if (this.products.length < 35) {
+                    if (this.products.length < 50) {
                         this.products = [
                             { id: 'p_acq_nat', name: 'Acqua Naturale 💧', category: 'Bevande', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
                             { id: 'p_acq_fri', name: 'Acqua Frizzante 🫧', category: 'Bevande', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
@@ -1310,68 +1277,43 @@
 
                 get filteredHubInventoryRows() {
                     let rows = this.currentInventoryRows;
-                    if (this.hubOnlyActiveStock) {
-                        rows = rows.filter(r => r.theoreticalQty > 0 || r.physicalQty > 0 || r.pendolariQty > 0);
-                    }
+                    if (this.hubOnlyActiveStock) rows = rows.filter(r => r.theoreticalQty > 0 || r.physicalQty > 0);
                     if (this.searchFilter.hubProducts) {
                         const q = this.searchFilter.hubProducts.toLowerCase();
                         rows = rows.filter(r => r.productName.toLowerCase().includes(q));
                     }
                     return rows;
                 },
-
                 get filteredProducts() {
                     if (!this.searchFilter.products) return this.products;
-                    const q = this.searchFilter.products.toLowerCase();
-                    return this.products.filter(p => p.name.toLowerCase().includes(q));
+                    return this.products.filter(p => p.name.toLowerCase().includes(this.searchFilter.products.toLowerCase()));
                 },
-
                 get filteredMultiLoadProducts() {
                     if (!this.searchFilter.multiLoad) return this.products;
-                    const q = this.searchFilter.multiLoad.toLowerCase();
-                    return this.products.filter(p => p.name.toLowerCase().includes(q));
+                    return this.products.filter(p => p.name.toLowerCase().includes(this.searchFilter.multiLoad.toLowerCase()));
                 },
-
                 get filteredMultiTransferProducts() {
                     if (!this.searchFilter.multiTransfer) return this.products;
-                    const q = this.searchFilter.multiTransfer.toLowerCase();
-                    return this.products.filter(p => p.name.toLowerCase().includes(q));
+                    return this.products.filter(p => p.name.toLowerCase().includes(this.searchFilter.multiTransfer.toLowerCase()));
                 },
-
                 get filteredMultiBoatTransferProducts() {
                     const list = this.getGroupedSelectableProducts();
                     if (!this.searchFilter.multiBoatTransfer) return list;
-                    const q = this.searchFilter.multiBoatTransfer.toLowerCase();
-                    return list.filter(p => p.name.toLowerCase().includes(q));
+                    return list.filter(p => p.name.toLowerCase().includes(this.searchFilter.multiBoatTransfer.toLowerCase()));
                 },
-
                 get filteredWarehouseStock() {
                     const summary = this.getWarehouseStockSummary();
                     if (!this.searchFilter.warehouse) return summary;
-                    const q = this.searchFilter.warehouse.toLowerCase();
-                    return summary.filter(item => item.name.toLowerCase().includes(q));
+                    return summary.filter(item => item.name.toLowerCase().includes(this.searchFilter.warehouse.toLowerCase()));
                 },
-
                 get filteredBoats() {
                     if (!this.searchFilter.boats) return this.boats;
-                    const q = this.searchFilter.boats.toLowerCase();
-                    return this.boats.filter(b => b.name.toLowerCase().includes(q));
+                    return this.boats.filter(b => b.name.toLowerCase().includes(this.searchFilter.boats.toLowerCase()));
                 },
-
                 get filteredInventories() {
                     const list = this.inventoryLogs.slice().reverse();
                     if (!this.searchFilter.inventories) return list;
-                    const q = this.searchFilter.inventories.toLowerCase();
-                    return list.filter(inv => this.getBoatName(inv.boatId).toLowerCase().includes(q) || (inv.date && inv.date.includes(q)));
-                },
-
-                focusNextDesktopInventoryInput(event) {
-                    const inputs = Array.from(document.querySelectorAll('.desktop-phys-input'));
-                    const idx = inputs.indexOf(event.target);
-                    if (idx > -1 && idx + 1 < inputs.length) {
-                        inputs[idx + 1].focus();
-                        inputs[idx + 1].select();
-                    }
+                    return list.filter(inv => this.getBoatName(inv.boatId).toLowerCase().includes(this.searchFilter.inventories.toLowerCase()));
                 },
 
                 handleEscapeKey() {
@@ -1385,7 +1327,6 @@
                 getLowStockProducts() {
                     return this.getWarehouseStockSummary().filter(item => item.qty <= 5);
                 },
-
                 saveToLocalStorage() {
                     localStorage.setItem('gest_products', JSON.stringify(this.products));
                     localStorage.setItem('gest_loads', JSON.stringify(this.warehouseLoads));
@@ -1394,45 +1335,30 @@
                     localStorage.setItem('gest_boat_transfers', JSON.stringify(this.boatTransfers));
                     localStorage.setItem('gest_pendolari', JSON.stringify(this.pendolariSheets));
                     localStorage.setItem('gest_inventories', JSON.stringify(this.inventoryLogs));
-                    this.saveDraftState();
                 },
-
-                saveDraftState() {
-                    localStorage.setItem('gest_drafts', JSON.stringify({
-                        loadForm: this.loadForm,
-                        transferForm: this.transferForm,
-                        boatTransferForm: this.boatTransferForm,
-                        pendolariForm: this.pendolariForm
-                    }));
-                },
-
+                saveDraftState() {},
                 toggleTheme() {
                     this.isDarkMode = !this.isDarkMode;
                     localStorage.setItem('gest_theme', this.isDarkMode ? 'dark' : 'light');
                 },
-
                 showNotify(title, message, type = 'success') {
                     this.notification = { show: true, title, message, type };
                     setTimeout(() => { this.notification.show = false; }, 3500);
                 },
-
                 formatCurrency(val) {
                     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val || 0);
                 },
-
                 getProductName(id) {
                     const grp = this.productGroups.find(g => g.groupId === id);
                     if (grp) return grp.name;
                     const p = this.products.find(item => item.id === id);
                     return p ? p.name : 'Prodotto';
                 },
-
                 getBoatName(id) {
                     const b = this.boats.find(item => item.id === id);
                     return b ? b.name : 'Barca';
                 },
 
-                // Product CRUD
                 openProductModal() {
                     this.productModal.isEdit = false;
                     this.productModal.form = { id: 'p_' + Date.now(), name: '', category: '', unit: 'Pz', costPrice: 0, pendolariPrice: 0, sellPrice: 0 };
@@ -1459,7 +1385,6 @@
                     this.saveToLocalStorage();
                 },
 
-                // Boat CRUD
                 openBoatModal() {
                     this.boatModal.isEdit = false;
                     this.boatModal.form = { id: 'boat_' + Date.now(), name: '', skipper: '', notes: '' };
@@ -1479,7 +1404,6 @@
                     }
                     this.boatModal.open = false;
                     this.saveToLocalStorage();
-                    this.showNotify('Flotta Aggiornata', 'Barca salvata.');
                 },
                 deleteBoat(id) {
                     this.boats = this.boats.filter(b => b.id !== id);
@@ -1490,7 +1414,6 @@
                     return invs.length > 0 ? invs[invs.length - 1].date : 'Mai';
                 },
 
-                // Warehouse Load
                 onSelectSingleLoadProduct() {
                     const p = this.products.find(x => x.id === this.currentLoadItem.productId);
                     if (p) this.currentLoadItem.costPrice = p.costPrice;
@@ -1499,37 +1422,26 @@
                     if (!this.currentLoadItem.productId || !this.currentLoadItem.quantity) return;
                     this.loadForm.items.push({ ...this.currentLoadItem });
                     this.currentLoadItem = { productId: '', quantity: '', costPrice: '' };
-                    this.saveDraftState();
                 },
                 addAllMultiLoadItems() {
                     let count = 0;
                     this.products.forEach(p => {
                         const qty = Number(this.multiLoadQuantities[p.id] || 0);
                         if (qty > 0) {
-                            const ex = this.loadForm.items.find(i => i.productId === p.id);
-                            if (ex) ex.quantity = Number(ex.quantity) + qty;
-                            else this.loadForm.items.push({ productId: p.id, quantity: qty, costPrice: p.costPrice || 0 });
+                            this.loadForm.items.push({ productId: p.id, quantity: qty, costPrice: p.costPrice || 0 });
                             this.multiLoadQuantities[p.id] = '';
                             count++;
                         }
                     });
-                    if (count > 0) {
-                        this.showNotify('Articoli Inseriti', `${count} prodotti aggiunti al DDT.`);
-                        this.saveDraftState();
-                    }
+                    if (count > 0) this.showNotify('Aggiunti', `${count} prodotti nel DDT.`);
                 },
-                removeLoadItem(idx) {
-                    this.loadForm.items.splice(idx, 1);
-                    this.saveDraftState();
-                },
+                removeLoadItem(idx) { this.loadForm.items.splice(idx, 1); },
                 addWarehouseLoad() {
-                    if (!this.loadForm.docNumber) { this.showNotify('Attenzione', 'Inserisci il N° DDT / Fattura.', 'error'); return; }
-                    if (this.loadForm.items.length === 0) { this.showNotify('Attenzione', 'Aggiungi almeno un prodotto.', 'error'); return; }
+                    if (!this.loadForm.docNumber || this.loadForm.items.length === 0) { this.showNotify('Attenzione', 'Compila N° DDT e articoli.', 'error'); return; }
                     this.warehouseLoads.push({ id: 'load_' + Date.now(), timestamp: Date.now(), ...this.loadForm, items: [...this.loadForm.items] });
                     this.saveToLocalStorage();
-                    this.loadForm.docNumber = '';
-                    this.loadForm.items = [];
-                    this.showNotify('Carico Registrato', 'Merce aggiunta al magazzino generale.');
+                    this.loadForm.docNumber = ''; this.loadForm.items = [];
+                    this.showNotify('Carico Registrato', 'Magazzino aggiornato.');
                 },
                 deleteWarehouseLoad(id) {
                     this.warehouseLoads = this.warehouseLoads.filter(l => l.id !== id);
@@ -1547,58 +1459,37 @@
                         return { productId: p.id, name: p.name, qty, totalCost: qty * p.costPrice };
                     });
                 },
-                getTotalWarehouseCostValue() {
-                    return this.getWarehouseStockSummary().reduce((sum, i) => sum + i.totalCost, 0);
-                },
+                getTotalWarehouseCostValue() { return this.getWarehouseStockSummary().reduce((sum, i) => sum + i.totalCost, 0); },
 
-                // Boat Transfer (Scarico su Barca)
-                getBoatSpecificTransfers(boatId) {
-                    return this.transfers.filter(t => t.boatId === boatId).slice().reverse();
-                },
+                getBoatSpecificTransfers(boatId) { return this.transfers.filter(t => t.boatId === boatId).slice().reverse(); },
                 addTransferItem() {
                     if (!this.currentTransferItem.productId || !this.currentTransferItem.quantity) return;
-                    const p = this.products.find(x => x.id === this.currentTransferItem.productId);
-                    this.transferForm.items.push({ productId: this.currentTransferItem.productId, quantity: Number(this.currentTransferItem.quantity), costPrice: p ? p.costPrice : 0 });
+                    this.transferForm.items.push({ productId: this.currentTransferItem.productId, quantity: Number(this.currentTransferItem.quantity) });
                     this.currentTransferItem = { productId: '', quantity: '' };
-                    this.saveDraftState();
                 },
                 addAllMultiTransferItems() {
-                    let count = 0;
                     this.products.forEach(p => {
                         const qty = Number(this.multiTransferQuantities[p.id] || 0);
                         if (qty > 0) {
-                            const ex = this.transferForm.items.find(i => i.productId === p.id);
-                            if (ex) ex.quantity = Number(ex.quantity) + qty;
-                            else this.transferForm.items.push({ productId: p.id, quantity: qty, costPrice: p.costPrice || 0 });
+                            this.transferForm.items.push({ productId: p.id, quantity: qty });
                             this.multiTransferQuantities[p.id] = '';
-                            count++;
                         }
                     });
-                    if (count > 0) {
-                        this.showNotify('Aggiunti', `${count} prodotti inseriti nella bolla.`);
-                        this.saveDraftState();
-                    }
                 },
                 createTransferFromHub() {
-                    if (!this.transferForm.bollaNumber) { this.showNotify('Attenzione', 'Inserisci il N° Bolla.', 'error'); return; }
-                    if (this.transferForm.items.length === 0) { this.showNotify('Attenzione', 'Inserisci almeno un prodotto.', 'error'); return; }
+                    if (!this.transferForm.bollaNumber || this.transferForm.items.length === 0) { this.showNotify('Attenzione', 'Compila bolla e articoli.', 'error'); return; }
                     const newT = { id: 'transfer_' + Date.now(), timestamp: Date.now(), ...this.transferForm, boatId: this.boatHub.boatId, items: [...this.transferForm.items] };
                     this.transfers.push(newT);
                     this.saveToLocalStorage();
-                    this.transferForm.bollaNumber = '';
-                    this.transferForm.items = [];
+                    this.transferForm.bollaNumber = ''; this.transferForm.items = [];
                     this.loadBoatInventoryData();
-                    this.showNotify('Bolla Registrata', 'Carico registrato sulla barca.');
-                    if (confirm(`Bolla ${newT.bollaNumber} registrata! Vuoi stampare la bolla adesso?`)) {
-                        this.printTransfer(newT);
-                    }
+                    this.showNotify('Caricato', 'Bolla salvata.');
                 },
                 deleteTransfer(id) {
                     this.transfers = this.transfers.filter(t => t.id !== id);
                     this.saveToLocalStorage();
                 },
 
-                // Boat-to-Boat Transfer
                 getAvailableQtyForBoatTransfer(productId) {
                     const normId = this.getNormalizedGroupId(productId);
                     const row = this.currentInventoryRows.find(r => r.productId === normId);
@@ -1608,86 +1499,54 @@
                 },
                 addBoatTransferItem() {
                     if (!this.currentBoatTransferItem.productId || !this.currentBoatTransferItem.quantity) return;
-                    const avail = this.getAvailableQtyForBoatTransfer(this.currentBoatTransferItem.productId);
-                    if (Number(this.currentBoatTransferItem.quantity) > avail) {
-                        this.showNotify('Scorta Insufficiente', `Disponibili a bordo solo ${avail} Pz.`, 'error');
-                        return;
-                    }
                     this.boatTransferForm.items.push({ productId: this.currentBoatTransferItem.productId, quantity: Number(this.currentBoatTransferItem.quantity) });
                     this.currentBoatTransferItem = { productId: '', quantity: '' };
-                    this.saveDraftState();
                 },
                 addAllMultiBoatTransferItems() {
-                    let count = 0, err = 0;
                     this.getGroupedSelectableProducts().forEach(p => {
                         const qty = Number(this.multiBoatTransferQuantities[p.id] || 0);
                         if (qty > 0) {
-                            const avail = this.getAvailableQtyForBoatTransfer(p.id);
-                            if (qty > avail) { err++; }
-                            else {
-                                const ex = this.boatTransferForm.items.find(i => i.productId === p.id);
-                                if (ex) ex.quantity = Number(ex.quantity) + qty;
-                                else this.boatTransferForm.items.push({ productId: p.id, quantity: qty });
-                                this.multiBoatTransferQuantities[p.id] = '';
-                                count++;
-                            }
+                            this.boatTransferForm.items.push({ productId: p.id, quantity: qty });
+                            this.multiBoatTransferQuantities[p.id] = '';
                         }
                     });
-                    if (err > 0) this.showNotify('Attenzione', `${err} articoli superano la giacenza a bordo.`, 'error');
-                    if (count > 0) { this.showNotify('Aggiunti', `${count} voci inserite nello spostamento.`); this.saveDraftState(); }
                 },
-                removeBoatTransferItem(idx) {
-                    this.boatTransferForm.items.splice(idx, 1);
-                    this.saveDraftState();
-                },
+                removeBoatTransferItem(idx) { this.boatTransferForm.items.splice(idx, 1); },
                 createBoatTransferFromHub() {
-                    if (!this.boatTransferForm.bollaNumber || !this.boatTransferForm.toBoatId) { this.showNotify('Attenzione', 'Compila N° Bolla e Barca Ricevente.', 'error'); return; }
-                    if (this.boatTransferForm.items.length === 0) { this.showNotify('Attenzione', 'Inserisci almeno un prodotto.', 'error'); return; }
+                    if (!this.boatTransferForm.bollaNumber || !this.boatTransferForm.toBoatId || this.boatTransferForm.items.length === 0) { this.showNotify('Attenzione', 'Compila tutti i campi.', 'error'); return; }
                     this.boatTransfers.push({ id: 'bt_' + Date.now(), timestamp: Date.now(), ...this.boatTransferForm, fromBoatId: this.boatHub.boatId, items: [...this.boatTransferForm.items] });
                     this.saveToLocalStorage();
-                    this.boatTransferForm.bollaNumber = '';
-                    this.boatTransferForm.toBoatId = '';
-                    this.boatTransferForm.items = [];
+                    this.boatTransferForm.bollaNumber = ''; this.boatTransferForm.toBoatId = ''; this.boatTransferForm.items = [];
                     this.loadBoatInventoryData();
-                    this.showNotify('Spostamento Eseguito', 'Merce trasferita tra barche.');
+                    this.showNotify('Spostato', 'Trasferito con successo.');
                 },
                 deleteBoatTransfer(id) {
                     this.boatTransfers = this.boatTransfers.filter(bt => bt.id !== id);
                     this.saveToLocalStorage();
                 },
 
-                // Buono Equipaggio e Ponte Comandante & Scheda Pendolari
-                onSheetTypeChange() {
-                    if (this.currentPendolariItem.productId) this.onPendolariProductSelect();
-                },
+                onSheetTypeChange() { this.onPendolariProductSelect(); },
                 onPendolariProductSelect() {
-                    if (this.pendolariForm.sheetType === 'equipaggio') {
-                        this.currentPendolariItem.customPrice = 0;
-                        return;
-                    }
+                    if (this.pendolariForm.sheetType === 'equipaggio') { this.currentPendolariItem.customPrice = 0; return; }
                     const grp = this.getGroupInfoForProduct(this.currentPendolariItem.productId);
                     if (grp) { this.currentPendolariItem.customPrice = grp.pendolariPrice; return; }
                     const p = this.products.find(x => x.id === this.currentPendolariItem.productId);
                     this.currentPendolariItem.customPrice = p ? (p.pendolariPrice || 0) : 0;
                 },
-                changePendolariQty(val) {
-                    this.currentPendolariItem.quantity = Math.max(1, Number(this.currentPendolariItem.quantity || 1) + val);
-                },
+                changePendolariQty(val) { this.currentPendolariItem.quantity = Math.max(1, Number(this.currentPendolariItem.quantity || 1) + val); },
                 addPendolariItem() {
                     if (!this.currentPendolariItem.productId) return;
                     const price = this.pendolariForm.sheetType === 'equipaggio' ? 0 : Number(this.currentPendolariItem.customPrice || 0);
                     this.pendolariForm.items.push({ productId: this.currentPendolariItem.productId, quantity: Number(this.currentPendolariItem.quantity || 1), customPrice: price });
                     this.currentPendolariItem = { productId: '', quantity: 1, customPrice: 0 };
-                    this.saveDraftState();
                 },
                 savePendolariSheetFromHub() {
                     if (this.pendolariForm.items.length === 0) { this.showNotify('Attenzione', 'Aggiungi almeno un articolo.', 'error'); return; }
                     this.pendolariSheets.push({ id: 'ps_' + Date.now(), timestamp: Date.now(), ...this.pendolariForm, boatId: this.boatHub.boatId, items: [...this.pendolariForm.items] });
                     this.saveToLocalStorage();
-                    this.pendolariForm.notes = '';
-                    this.pendolariForm.items = [];
+                    this.pendolariForm.notes = ''; this.pendolariForm.items = [];
                     this.loadBoatInventoryData();
-                    this.showNotify('Registrato', 'Documento salvato correttamente.');
+                    this.showNotify('Salvato', 'Documento registrato.');
                 },
                 getPendolariSheetTotal(ps) {
                     if (ps.sheetType === 'equipaggio') return 0;
@@ -1698,7 +1557,6 @@
                     this.saveToLocalStorage();
                 },
 
-                // Inventory Calculation
                 getBoatTotalItemsCount(boatId) {
                     const invs = this.inventoryLogs.filter(i => i.boatId === boatId);
                     const lastInv = invs.length > 0 ? invs[invs.length - 1] : null;
@@ -1706,49 +1564,23 @@
                     let tot = 0;
                     if (lastInv && lastInv.items) lastInv.items.forEach(i => tot += Number(i.physicalQty || 0));
                     this.transfers.filter(t => t.boatId === boatId && (t.timestamp || 0) > lastTs).forEach(t => t.items.forEach(i => tot += Number(i.quantity || 0)));
-                    this.boatTransfers.filter(bt => bt.toBoatId === boatId && (bt.timestamp || 0) > lastTs).forEach(bt => bt.items.forEach(i => tot += Number(i.quantity || 0)));
-                    this.boatTransfers.filter(bt => bt.fromBoatId === boatId && (bt.timestamp || 0) > lastTs).forEach(bt => bt.items.forEach(i => tot -= Number(i.quantity || 0)));
                     return Math.max(0, tot);
                 },
 
                 loadBoatInventoryData() {
                     if (!this.selectedBoatForInventory) { this.currentInventoryRows = []; return; }
                     this.actualRevenueInput = 0;
-
                     const boatInvs = this.inventoryLogs.filter(inv => inv.boatId === this.selectedBoatForInventory);
                     const lastInv = boatInvs.length > 0 ? boatInvs[boatInvs.length - 1] : null;
                     const lastTs = lastInv ? (lastInv.timestamp || 0) : 0;
 
                     let initMap = {}, addMap = {}, movMap = {}, pendMap = {}, pendRevMap = {};
-
                     if (lastInv && lastInv.items) {
-                        lastInv.items.forEach(i => {
-                            const nid = this.getNormalizedGroupId(i.productId);
-                            initMap[nid] = (initMap[nid] || 0) + Number(i.physicalQty || 0);
-                        });
+                        lastInv.items.forEach(i => { initMap[this.getNormalizedGroupId(i.productId)] = Number(i.physicalQty || 0); });
                     }
-
                     this.transfers.filter(t => t.boatId === this.selectedBoatForInventory && (t.timestamp || 0) > lastTs).forEach(t => {
-                        t.items.forEach(i => {
-                            const nid = this.getNormalizedGroupId(i.productId);
-                            addMap[nid] = (addMap[nid] || 0) + Number(i.quantity || 0);
-                        });
+                        t.items.forEach(i => { const nid = this.getNormalizedGroupId(i.productId); addMap[nid] = (addMap[nid] || 0) + Number(i.quantity || 0); });
                     });
-
-                    this.boatTransfers.filter(bt => bt.toBoatId === this.selectedBoatForInventory && (bt.timestamp || 0) > lastTs).forEach(bt => {
-                        bt.items.forEach(i => {
-                            const nid = this.getNormalizedGroupId(i.productId);
-                            movMap[nid] = (movMap[nid] || 0) + Number(i.quantity || 0);
-                        });
-                    });
-
-                    this.boatTransfers.filter(bt => bt.fromBoatId === this.selectedBoatForInventory && (bt.timestamp || 0) > lastTs).forEach(bt => {
-                        bt.items.forEach(i => {
-                            const nid = this.getNormalizedGroupId(i.productId);
-                            movMap[nid] = (movMap[nid] || 0) - Number(i.quantity || 0);
-                        });
-                    });
-
                     this.pendolariSheets.filter(ps => ps.boatId === this.selectedBoatForInventory && (ps.timestamp || 0) > lastTs).forEach(ps => {
                         ps.items.forEach(i => {
                             const nid = this.getNormalizedGroupId(i.productId);
@@ -1758,39 +1590,22 @@
                         });
                     });
 
-                    const selectable = this.getGroupedSelectableProducts();
-                    this.currentInventoryRows = selectable.map(item => {
+                    this.currentInventoryRows = this.getGroupedSelectableProducts().map(item => {
                         const id = item.id;
                         const initialQty = initMap[id] || 0;
                         const addedQty = addMap[id] || 0;
-                        const movedQty = movMap[id] || 0;
-                        const theoreticalQty = Math.max(0, initialQty + addedQty + movedQty);
+                        const theoreticalQty = Math.max(0, initialQty + addedQty);
                         return {
-                            displayId: id,
-                            productId: id,
-                            productName: item.name,
-                            initialQty,
-                            addedQty,
-                            movedQty,
-                            theoreticalQty,
-                            physicalQty: theoreticalQty,
-                            pendolariQty: pendMap[id] || 0,
-                            explicitPendolariRev: pendRevMap[id] || 0,
-                            pendolariPrice: item.pendolariPrice || 0,
-                            sellPrice: item.sellPrice || 0
+                            displayId: id, productId: id, productName: item.name, initialQty, addedQty, movedQty: 0,
+                            theoreticalQty, physicalQty: theoreticalQty, pendolariQty: pendMap[id] || 0,
+                            explicitPendolariRev: pendRevMap[id] || 0, sellPrice: item.sellPrice || 0
                         };
                     });
                 },
 
-                getSoldQty(row) {
-                    return Math.max(0, Number(row.theoreticalQty || 0) - Number(row.physicalQty || 0));
-                },
-                getEffectivePendolariQty(row) {
-                    return Math.min(this.getSoldQty(row), Number(row.pendolariQty || 0));
-                },
-                getPublicSoldQty(row) {
-                    return Math.max(0, this.getSoldQty(row) - this.getEffectivePendolariQty(row));
-                },
+                getSoldQty(row) { return Math.max(0, Number(row.theoreticalQty || 0) - Number(row.physicalQty || 0)); },
+                getEffectivePendolariQty(row) { return Math.min(this.getSoldQty(row), Number(row.pendolariQty || 0)); },
+                getPublicSoldQty(row) { return Math.max(0, this.getSoldQty(row) - this.getEffectivePendolariQty(row)); },
                 getPendolariRevenueRow(row) {
                     if (row.pendolariQty > 0) {
                         const prop = Math.min(1, this.getEffectivePendolariQty(row) / row.pendolariQty);
@@ -1798,107 +1613,65 @@
                     }
                     return 0;
                 },
-                getPublicRevenueRow(row) {
-                    return this.getPublicSoldQty(row) * Number(row.sellPrice || 0);
-                },
-                getExpectedRevenueRow(row) {
-                    return this.getPendolariRevenueRow(row) + this.getPublicRevenueRow(row);
-                },
-                getTotalExpectedRevenue() {
-                    return this.currentInventoryRows.reduce((s, r) => s + this.getExpectedRevenueRow(r), 0);
-                },
-                getCashDifference() {
-                    return Number(this.actualRevenueInput || 0) - this.getTotalExpectedRevenue();
-                },
+                getPublicRevenueRow(row) { return this.getPublicSoldQty(row) * Number(row.sellPrice || 0); },
+                getExpectedRevenueRow(row) { return this.getPendolariRevenueRow(row) + this.getPublicRevenueRow(row); },
+                getTotalExpectedRevenue() { return this.currentInventoryRows.reduce((s, r) => s + this.getExpectedRevenueRow(r), 0); },
+                getCashDifference() { return Number(this.actualRevenueInput || 0) - this.getTotalExpectedRevenue(); },
 
                 saveInventoryRecord() {
                     const expectedTotal = this.getTotalExpectedRevenue();
-                    const cashDiff = this.getCashDifference();
+                    const actualTotal = Number(this.actualRevenueInput || 0);
                     const ts = Date.now();
                     const newInv = {
-                        id: 'inv_' + ts,
-                        timestamp: ts,
-                        boatId: this.selectedBoatForInventory,
-                        date: this.inventoryDate,
+                        id: 'inv_' + ts, timestamp: ts, boatId: this.selectedBoatForInventory, date: this.inventoryDate,
                         items: this.currentInventoryRows.map(r => ({
-                            productId: r.productId,
-                            productName: r.productName,
-                            initialQty: r.initialQty,
-                            addedQty: r.addedQty,
-                            movedQty: r.movedQty,
-                            theoreticalQty: r.theoreticalQty,
-                            physicalQty: Number(r.physicalQty || 0),
-                            soldQty: this.getSoldQty(r),
-                            pendolariQty: r.pendolariQty,
-                            sellPrice: r.sellPrice,
-                            expectedRevenue: this.getExpectedRevenueRow(r)
+                            productId: r.productId, productName: r.productName, initialQty: r.initialQty, addedQty: r.addedQty,
+                            theoreticalQty: r.theoreticalQty, physicalQty: Number(r.physicalQty || 0), soldQty: this.getSoldQty(r),
+                            pendolariQty: r.pendolariQty, sellPrice: r.sellPrice, expectedRevenue: this.getExpectedRevenueRow(r)
                         })),
-                        expectedRevenue: expectedTotal,
-                        actualRevenue: Number(this.actualRevenueInput || 0),
-                        cashDiff
+                        expectedRevenue: expectedTotal, actualRevenue: actualTotal, cashDiff: actualTotal - expectedTotal
                     };
                     this.inventoryLogs.push(newInv);
                     this.saveToLocalStorage();
                     this.boatHub.open = false;
                     this.openSavedInventoryPrint(newInv);
-                    this.showNotify('Inventario Salvato', 'Verbale registrato con successo.');
+                    this.showNotify('Salvato', 'Verbale inventario registrato.');
                 },
                 deleteInventoryLog(id) {
                     this.inventoryLogs = this.inventoryLogs.filter(i => i.id !== id);
                     this.saveToLocalStorage();
                 },
 
-                // Print & Excel
                 openCurrentInventoryPrint() {
                     this.inventoryPrintModal.data = {
-                        boatName: this.getBoatName(this.selectedBoatForInventory),
-                        date: this.inventoryDate,
-                        expectedRevenue: this.getTotalExpectedRevenue(),
-                        actualRevenue: Number(this.actualRevenueInput || 0),
-                        cashDiff: this.getCashDifference(),
-                        items: this.currentInventoryRows.map(r => ({
-                            ...r,
-                            soldQty: this.getSoldQty(r),
-                            expectedRevenue: this.getExpectedRevenueRow(r)
-                        }))
+                        boatName: this.getBoatName(this.selectedBoatForInventory), date: this.inventoryDate,
+                        expectedRevenue: this.getTotalExpectedRevenue(), actualRevenue: Number(this.actualRevenueInput || 0),
+                        cashDiff: this.getCashDifference(), items: this.currentInventoryRows.map(r => ({ ...r, soldQty: this.getSoldQty(r), expectedRevenue: this.getExpectedRevenueRow(r) }))
                     };
                     this.inventoryPrintModal.open = true;
                 },
                 openSavedInventoryPrint(inv) {
                     this.inventoryPrintModal.data = {
-                        boatName: this.getBoatName(inv.boatId),
-                        date: inv.date,
-                        expectedRevenue: inv.expectedRevenue,
-                        actualRevenue: inv.actualRevenue,
-                        cashDiff: inv.cashDiff,
-                        items: inv.items.map(i => ({ ...i, productName: i.productName || this.getProductName(i.productId) }))
+                        boatName: this.getBoatName(inv.boatId), date: inv.date,
+                        expectedRevenue: inv.expectedRevenue, actualRevenue: inv.actualRevenue,
+                        cashDiff: inv.cashDiff, items: inv.items.map(i => ({ ...i, productName: i.productName || this.getProductName(i.productId) }))
                     };
                     this.inventoryPrintModal.open = true;
-                },
-                exportCurrentInventoryToExcel() {
-                    this.openCurrentInventoryPrint();
-                    this.inventoryPrintModal.open = false;
-                    this.exportModalInventoryToExcel();
-                },
-                exportSingleInventoryExcel(inv) {
-                    this.openSavedInventoryPrint(inv);
-                    this.inventoryPrintModal.open = false;
-                    this.exportModalInventoryToExcel();
                 },
                 exportModalInventoryToExcel() {
                     const d = this.inventoryPrintModal.data;
                     if (!d || typeof XLSX === 'undefined') return;
                     const wb = XLSX.utils.book_new();
-                    const rows = [
-                        ["VERBALE INVENTARIO - " + d.boatName + " (" + d.date + ")"],
-                        [],
-                        ["Voce", "Iniziale", "Carichi", "Spostamenti", "Teorica", "Fisica", "Venduti", "Pend/Buoni", "Prezzo Pub.", "Incasso Atteso"]
-                    ];
-                    d.items.forEach(i => rows.push([i.productName, i.initialQty, i.addedQty, i.movedQty, i.theoreticalQty, i.physicalQty, i.soldQty, i.pendolariQty, i.sellPrice, i.expectedRevenue]));
-                    rows.push([], ["Incasso Atteso:", d.expectedRevenue], ["Incasso Reale:", d.actualRevenue], ["Plus/Ammanco:", d.cashDiff]);
+                    const rows = [["VERBALE INVENTARIO - " + d.boatName + " (" + d.date + ")"], [], ["Voce", "Iniziale", "Carichi", "Teorica", "Fisica", "Venduti", "Pend/Buoni", "Prezzo Pub.", "Incasso Atteso"]];
+                    d.items.forEach(i => rows.push([i.productName, i.initialQty, i.addedQty, i.theoreticalQty, i.physicalQty, i.soldQty, i.pendolariQty, i.sellPrice, i.expectedRevenue]));
                     const ws = XLSX.utils.aoa_to_sheet(rows);
                     XLSX.utils.book_append_sheet(wb, ws, "Inventario");
                     XLSX.writeFile(wb, `Inventario_${d.boatName}_${d.date}.xlsx`);
+                },
+                exportSingleInventoryExcel(inv) {
+                    this.openSavedInventoryPrint(inv);
+                    this.inventoryPrintModal.open = false;
+                    this.exportModalInventoryToExcel();
                 },
                 exportAllInventoriesExcel() {
                     if (typeof XLSX === 'undefined') return;
@@ -1910,43 +1683,29 @@
                     XLSX.writeFile(wb, `Storico_Inventari.xlsx`);
                 },
 
-                printDocLoad(load) {
-                    this.printModal = { open: true, title: 'DDT Magazzino', docNumber: load.docNumber, date: load.date, destination: 'MAGAZZINO GENERALE', destinationCity: 'POZZUOLI', items: load.items || [load] };
-                },
-                printTransfer(t) {
-                    this.printModal = { open: true, title: 'Bolla Carico Barca', docNumber: t.bollaNumber, date: t.date, destination: this.getBoatName(t.boatId), destinationCity: 'NAPOLI', items: t.items };
-                },
-                printBoatTransferDoc(bt) {
-                    this.printModal = { open: true, title: 'Bolla Spostamento', docNumber: bt.bollaNumber, date: bt.date, destination: this.getBoatName(bt.toBoatId), destinationCity: 'NAPOLI', items: bt.items };
-                },
+                printDocLoad(load) { this.printModal = { open: true, title: 'DDT Magazzino', docNumber: load.docNumber, date: load.date, destination: 'MAGAZZINO GENERALE', items: load.items || [load] }; },
+                printTransfer(t) { this.printModal = { open: true, title: 'Bolla Carico', docNumber: t.bollaNumber, date: t.date, destination: this.getBoatName(t.boatId), items: t.items }; },
+                printBoatTransferDoc(bt) { this.printModal = { open: true, title: 'Bolla Spostamento', docNumber: bt.bollaNumber, date: bt.date, destination: this.getBoatName(bt.toBoatId), items: bt.items }; },
                 triggerPrint() { window.print(); },
 
-                // Backup & Restore
                 exportBackup() {
                     const data = { products: this.products, warehouseLoads: this.warehouseLoads, boats: this.boats, transfers: this.transfers, boatTransfers: this.boatTransfers, pendolariSheets: this.pendolariSheets, inventoryLogs: this.inventoryLogs };
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = `backup_flotta_${new Date().toISOString().slice(0,10)}.json`;
-                    a.click();
+                    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup_gestionale.json`; a.click();
                 },
                 importBackup(e) {
-                    const f = e.target.files[0];
-                    if (!f) return;
+                    const f = e.target.files[0]; if (!f) return;
                     const r = new FileReader();
                     r.onload = (ev) => {
                         try {
                             const d = JSON.parse(ev.target.result);
                             if (d.products) {
-                                this.products = d.products;
-                                this.boats = d.boats || this.boats;
-                                this.warehouseLoads = d.warehouseLoads || [];
-                                this.transfers = d.transfers || [];
-                                this.boatTransfers = d.boatTransfers || [];
-                                this.pendolariSheets = d.pendolariSheets || [];
+                                this.products = d.products; this.boats = d.boats || this.boats;
+                                this.warehouseLoads = d.warehouseLoads || []; this.transfers = d.transfers || [];
+                                this.boatTransfers = d.boatTransters || []; this.pendolariSheets = d.pendolariSheets || [];
                                 this.inventoryLogs = d.inventoryLogs || [];
                                 this.saveToLocalStorage();
-                                this.showNotify('Backup Ripristinato', 'Dati caricati con successo.');
+                                this.showNotify('Ripristinato', 'Backup caricato con successo.');
                             }
                         } catch (err) { this.showNotify('Errore', 'File non valido.', 'error'); }
                     };
