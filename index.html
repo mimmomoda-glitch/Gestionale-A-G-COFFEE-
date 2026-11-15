@@ -80,7 +80,7 @@
                     <i class="fa-solid fa-warehouse"></i> Magazzino Gen.
                 </button>
                 <button @click="activeTab = 'prodotti'" :class="activeTab === 'prodotti' ? 'bg-blue-600 text-white shadow' : (isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-700 hover:text-slate-900')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-tags"></i> Listino (60)
+                    <i class="fa-solid fa-tags"></i> Listino
                 </button>
                 <button @click="activeTab = 'storico'" :class="activeTab === 'storico' ? 'bg-blue-600 text-white shadow' : (isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-700 hover:text-slate-900')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-clock-rotate-left"></i> Storico & Report
@@ -578,7 +578,7 @@
 
                     <!-- Schede Prodotto Compatte per Smartphone -->
                     <div class="space-y-2">
-                        <template x-for="row in filteredHubInventoryRows" :key="row.productId">
+                        <template x-for="row in filteredHubInventoryRows" :key="row.displayId">
                             <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'" class="border rounded-2xl p-2.5 sm:p-3 space-y-2">
                                 <div class="flex justify-between items-center gap-2">
                                     <div class="min-w-0">
@@ -717,7 +717,7 @@
                     <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'" class="p-3 rounded-2xl border space-y-2.5">
                         <select x-model="currentPendolariItem.productId" @change="onPendolariProductSelect()" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border rounded-xl px-3 py-2 text-xs font-bold">
                             <option value="">-- Seleziona Prodotto --</option>
-                            <template x-for="p in products" :key="p.id">
+                            <template x-for="p in getGroupedSelectableProducts()" :key="p.id">
                                 <option :value="p.id" x-text="p.name"></option>
                             </template>
                         </select>
@@ -781,7 +781,7 @@
                     <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'" class="p-3 rounded-2xl border space-y-2.5">
                         <select x-model="currentBoatTransferItem.productId" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border rounded-xl px-3 py-2 text-xs font-bold">
                             <option value="">-- Prodotto a bordo da trasferire --</option>
-                            <template x-for="p in products" :key="p.id">
+                            <template x-for="p in getGroupedSelectableProducts()" :key="p.id">
                                 <option :value="p.id" x-text="p.name + ' (A bordo: ' + getAvailableQtyForBoatTransfer(p.id) + ')'"></option>
                             </template>
                         </select>
@@ -1078,7 +1078,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="item in getFilteredPrintInventoryItems()" :key="item.productId">
+                            <template x-for="item in getFilteredPrintInventoryItems()" :key="item.displayId">
                                 <tr class="border-b border-slate-300 odd:bg-white even:bg-slate-50">
                                     <td class="p-1.5 border-r border-slate-300 font-bold text-slate-900" x-text="item.productName"></td>
                                     <td class="p-1.5 border-r border-slate-300 text-center" x-text="item.initialQty"></td>
@@ -1297,6 +1297,18 @@
                 currentInventoryRows: [],
                 actualRevenueInput: 0,
 
+                // Gruppi di prodotti unificati per inventario, buoni e pendolari
+                softDrinkIds: ['p_ltn_1', 'p_ltn_2', 'p_ltn_3', 'p_ltn_4', 'p_ltn_5', 'p_ltn_6', 'p_ltn_7'],
+                biscottiIds: ['p_rin_1', 'p_rin_2', 'p_rin_3'],
+                acquaIds: ['p_acq_nat', 'p_acq_fri'],
+                caramelleGommeIds: ['p_car_1', 'p_car_2'],
+                patatineFonziesIds: ['p_fon_1', 'p_fon_2'],
+                vinoProseccoIds: ['p_vin_1', 'p_vin_2'],
+                energyDrinkIds: ['p_red_1', 'p_red_2'],
+                rizCipsterIds: ['p_rit_1', 'p_rit_2'],
+                cioccolatoIds: ['p_twi_1', 'p_twi_2', 'p_twi_3', 'p_twi_4', 'p_twi_5'],
+                snackDolciIds: ['p_bue_1', 'p_bue_2', 'p_bue_3', 'p_kin'],
+
                 initData() {
                     const savedTheme = localStorage.getItem('gest_theme');
                     if (savedTheme !== null) {
@@ -1483,6 +1495,20 @@
                     return stockDetails.reduce((sum, item) => sum + item.currentQty, 0);
                 },
 
+                resolveUnifiedGroupId(id) {
+                    if (this.softDrinkIds.includes(id)) return 'group_lattine';
+                    if (this.biscottiIds.includes(id)) return 'group_biscotti';
+                    if (this.acquaIds.includes(id)) return 'group_acqua';
+                    if (this.caramelleGommeIds.includes(id)) return 'group_caramelle_gomme';
+                    if (this.patatineFonziesIds.includes(id)) return 'group_patatine_fonzies';
+                    if (this.vinoProseccoIds.includes(id)) return 'group_vino_prosecco';
+                    if (this.energyDrinkIds.includes(id)) return 'group_energy_drink';
+                    if (this.rizCipsterIds.includes(id)) return 'group_riz_cipster';
+                    if (this.cioccolatoIds.includes(id)) return 'group_cioccolato';
+                    if (this.snackDolciIds.includes(id)) return 'group_snack_dolci';
+                    return id;
+                },
+
                 getBoatCurrentStockDetails(boatId) {
                     if (!boatId) return [];
 
@@ -1497,54 +1523,59 @@
 
                     if (lastInventory && lastInventory.items) {
                         lastInventory.items.forEach(item => {
-                            initialStockMap[item.productId] = Number(item.physicalQty || 0);
+                            const uId = this.resolveUnifiedGroupId(item.productId);
+                            initialStockMap[uId] = (initialStockMap[uId] || 0) + Number(item.physicalQty || 0);
                         });
                     }
 
                     this.transfers.filter(t => t.boatId === boatId).forEach(t => {
                         const tTime = t.timestamp || new Date(t.date + 'T12:00:00').getTime();
                         if (tTime > lastInvTimestamp) {
-                            t.items.forEach(i => { addedStockMap[i.productId] = (addedStockMap[i.productId] || 0) + Number(i.quantity); });
+                            t.items.forEach(i => {
+                                const uId = this.resolveUnifiedGroupId(i.productId);
+                                addedStockMap[uId] = (addedStockMap[uId] || 0) + Number(i.quantity);
+                            });
                         }
                     });
 
                     this.boatTransfers.filter(bt => bt.toBoatId === boatId).forEach(bt => {
                         const btTime = bt.timestamp || new Date(bt.date + 'T12:00:00').getTime();
                         if (btTime > lastInvTimestamp) {
-                            bt.items.forEach(i => { movedStockMap[i.productId] = (movedStockMap[i.productId] || 0) + Number(i.quantity); });
+                            bt.items.forEach(i => {
+                                const uId = this.resolveUnifiedGroupId(i.productId);
+                                movedStockMap[uId] = (movedStockMap[uId] || 0) + Number(i.quantity);
+                            });
                         }
                     });
 
                     this.boatTransfers.filter(bt => bt.fromBoatId === boatId).forEach(bt => {
                         const btTime = bt.timestamp || new Date(bt.date + 'T12:00:00').getTime();
                         if (btTime > lastInvTimestamp) {
-                            bt.items.forEach(i => { movedStockMap[i.productId] = (movedStockMap[i.productId] || 0) - Number(i.quantity); });
+                            bt.items.forEach(i => {
+                                const uId = this.resolveUnifiedGroupId(i.productId);
+                                movedStockMap[uId] = (movedStockMap[uId] || 0) - Number(i.quantity);
+                            });
                         }
                     });
 
                     this.pendolariSheets.filter(ps => ps.boatId === boatId).forEach(ps => {
                         const psTime = ps.timestamp || new Date(ps.date + 'T12:00:00').getTime();
                         if (psTime > lastInvTimestamp) {
-                            ps.items.forEach(i => { pendolariMap[i.productId] = (pendolariMap[i.productId] || 0) + Number(i.quantity); });
+                            ps.items.forEach(i => {
+                                const uId = this.resolveUnifiedGroupId(i.productId);
+                                pendolariMap[uId] = (pendolariMap[uId] || 0) + Number(i.quantity);
+                            });
                         }
                     });
 
-                    return this.products.map(p => {
+                    return this.getGroupedSelectableProducts().map(p => {
                         const initialQty = Number(initialStockMap[p.id] || 0);
                         const addedQty = Number(addedStockMap[p.id] || 0);
                         const movedQty = Number(movedStockMap[p.id] || 0);
                         const pendolariQty = Number(pendolariMap[p.id] || 0);
                         const currentQty = Math.max(0, initialQty + addedQty + movedQty - pendolariQty);
 
-                        return {
-                            productId: p.id,
-                            name: p.name,
-                            initialQty,
-                            addedQty,
-                            movedQty,
-                            pendolariQty,
-                            currentQty
-                        };
+                        return { productId: p.id, name: p.name, initialQty, addedQty, movedQty, pendolariQty, currentQty };
                     });
                 },
 
@@ -1654,9 +1685,162 @@
                     reader.readAsText(file);
                 },
 
+                // Restituisce la lista prodotti raggruppando le categorie richieste
+                getGroupedSelectableProducts() {
+                    const list = [];
+                    let addedLattine = false;
+                    let addedBiscotti = false;
+                    let addedAcqua = false;
+                    let addedCaramelleGomme = false;
+                    let addedPatatineFonzies = false;
+                    let addedVinoProsecco = false;
+                    let addedEnergyDrink = false;
+                    let addedRizCipster = false;
+                    let addedCioccolato = false;
+                    let addedSnackDolci = false;
+
+                    this.products.forEach(p => {
+                        if (this.softDrinkIds.includes(p.id)) {
+                            if (!addedLattine) {
+                                list.push({
+                                    id: 'group_lattine',
+                                    name: 'Lattine 🥤 (Coca, Coca 0, Fanta, Sprite, Lemonsoda, Thé)',
+                                    category: 'Bevande',
+                                    unit: 'Pz',
+                                    costPrice: p.costPrice,
+                                    pendolariPrice: p.pendolariPrice,
+                                    sellPrice: p.sellPrice
+                                });
+                                addedLattine = true;
+                            }
+                        } else if (this.biscottiIds.includes(p.id)) {
+                            if (!addedBiscotti) {
+                                list.push({
+                                    id: 'group_biscotti',
+                                    name: 'Biscotti 🍪 (Baiocchi, Oreo, Ringo)',
+                                    category: 'Snack',
+                                    unit: 'Pz',
+                                    costPrice: p.costPrice,
+                                    pendolariPrice: p.pendolariPrice,
+                                    sellPrice: p.sellPrice
+                                });
+                                addedBiscotti = true;
+                            }
+                        } else if (this.acquaIds.includes(p.id)) {
+                            if (!addedAcqua) {
+                                list.push({
+                                    id: 'group_acqua',
+                                    name: 'Acqua 💧 (Naturale, Frizzante)',
+                                    category: 'Bevande',
+                                    unit: 'Pz',
+                                    costPrice: p.costPrice,
+                                    pendolariPrice: p.pendolariPrice,
+                                    sellPrice: p.sellPrice
+                                });
+                                addedAcqua = true;
+                            }
+                        } else if (this.caramelleGommeIds.includes(p.id)) {
+                            if (!addedCaramelleGomme) {
+                                list.push({
+                                    id: 'group_caramelle_gomme',
+                                    name: 'Caramelle e Gomme 🍬',
+                                    category: 'Snack',
+                                    unit: 'Pz',
+                                    costPrice: p.costPrice,
+                                    pendolariPrice: p.pendolariPrice,
+                                    sellPrice: p.sellPrice
+                                });
+                                addedCaramelleGomme = true;
+                            }
+                        } else if (this.patatineFonziesIds.includes(p.id)) {
+                            if (!addedPatatineFonzies) {
+                                list.push({
+                                    id: 'group_patatine_fonzies',
+                                    name: 'Fonzies e Patatine 🍟',
+                                    category: 'Snack',
+                                    unit: 'Pz',
+                                    costPrice: p.costPrice,
+                                    pendolariPrice: p.pendolariPrice,
+                                    sellPrice: p.sellPrice
+                                });
+                                addedPatatineFonzies = true;
+                            }
+                        } else if (this.vinoProseccoIds.includes(p.id)) {
+                            if (!addedVinoProsecco) {
+                                list.push({
+                                    id: 'group_vino_prosecco',
+                                    name: 'Vino e Prosecco 🍷',
+                                    category: 'Bevande',
+                                    unit: 'Pz',
+                                    costPrice: p.costPrice,
+                                    pendolariPrice: p.pendolariPrice,
+                                    sellPrice: p.sellPrice
+                                });
+                                addedVinoProsecco = true;
+                            }
+                        } else if (this.energyDrinkIds.includes(p.id)) {
+                            if (!addedEnergyDrink) {
+                                list.push({
+                                    id: 'group_energy_drink',
+                                    name: 'Energy Drink ⚡ (Red Bull, Gatorade)',
+                                    category: 'Bevande',
+                                    unit: 'Pz',
+                                    costPrice: p.costPrice,
+                                    pendolariPrice: p.pendolariPrice,
+                                    sellPrice: p.sellPrice
+                                });
+                                addedEnergyDrink = true;
+                            }
+                        } else if (this.rizCipsterIds.includes(p.id)) {
+                            if (!addedRizCipster) {
+                                list.push({
+                                    id: 'group_riz_cipster',
+                                    name: 'Ritz e Cipster 🍪',
+                                    category: 'Snack',
+                                    unit: 'Pz',
+                                    costPrice: p.costPrice,
+                                    pendolariPrice: p.pendolariPrice,
+                                    sellPrice: p.sellPrice
+                                });
+                                addedRizCipster = true;
+                            }
+                        } else if (this.cioccolatoIds.includes(p.id)) {
+                            if (!addedCioccolato) {
+                                list.push({
+                                    id: 'group_cioccolato',
+                                    name: 'Cioccolato 🍫 (Twix, M&M, KitKat, Mars, Snickers)',
+                                    category: 'Snack',
+                                    unit: 'Pz',
+                                    costPrice: p.costPrice,
+                                    pendolariPrice: p.pendolariPrice,
+                                    sellPrice: p.sellPrice
+                                });
+                                addedCioccolato = true;
+                            }
+                        } else if (this.snackDolciIds.includes(p.id)) {
+                            if (!addedSnackDolci) {
+                                list.push({
+                                    id: 'group_snack_dolci',
+                                    name: 'Snack Dolci 🍫 (Bueno, Bready, Biscuits, Kinder Cards)',
+                                    category: 'Snack',
+                                    unit: 'Pz',
+                                    costPrice: p.costPrice,
+                                    pendolariPrice: p.pendolariPrice,
+                                    sellPrice: p.sellPrice
+                                });
+                                addedSnackDolci = true;
+                            }
+                        } else {
+                            list.push(p);
+                        }
+                    });
+                    return list;
+                },
+
                 buildInventoryPayloadFromCurrent() {
                     const items = this.currentInventoryRows.map(row => ({
                         productId: row.productId,
+                        displayId: row.displayId,
                         productName: row.productName,
                         initialQty: Number(row.initialQty || 0),
                         addedQty: Number(row.addedQty || 0),
@@ -1696,7 +1880,8 @@
 
                         return {
                             productId: item.productId,
-                            productName: this.getProductName(item.productId),
+                            displayId: item.displayId || item.productId,
+                            productName: item.productName || this.getProductName(item.productId),
                             initialQty: Number(item.initialQty || 0),
                             addedQty: Number(item.addedQty || 0),
                             movedQty: Number(item.movedQty || 0),
@@ -1895,6 +2080,16 @@
                 },
 
                 getProductName(id) {
+                    if (id === 'group_lattine') return 'Lattine 🥤';
+                    if (id === 'group_biscotti') return 'Biscotti 🍪';
+                    if (id === 'group_acqua') return 'Acqua 💧';
+                    if (id === 'group_caramelle_gomme') return 'Caramelle e Gomme 🍬';
+                    if (id === 'group_patatine_fonzies') return 'Fonzies e Patatine 🍟';
+                    if (id === 'group_vino_prosecco') return 'Vino e Prosecco 🍷';
+                    if (id === 'group_energy_drink') return 'Energy Drink ⚡';
+                    if (id === 'group_riz_cipster') return 'Ritz e Cipster 🍪';
+                    if (id === 'group_cioccolato') return 'Cioccolato 🍫';
+                    if (id === 'group_snack_dolci') return 'Snack Dolci 🍫';
                     const p = this.products.find(item => item.id === id);
                     return p ? p.name : 'Prodotto Sconosciuto';
                 },
@@ -2312,7 +2507,8 @@
 
                     if (lastInventory && lastInventory.items) {
                         lastInventory.items.forEach(item => {
-                            initialStockMap[item.productId] = Number(item.physicalQty || 0);
+                            const pId = this.resolveUnifiedGroupId(item.displayId || item.productId);
+                            initialStockMap[pId] = Number(item.physicalQty || 0);
                         });
                     }
 
@@ -2322,7 +2518,8 @@
                             const tTime = t.timestamp || new Date(t.date + 'T12:00:00').getTime();
                             if (tTime > lastInvTimestamp) {
                                 t.items.forEach(i => {
-                                    addedStockMap[i.productId] = (addedStockMap[i.productId] || 0) + Number(i.quantity);
+                                    const targetId = this.resolveUnifiedGroupId(i.productId);
+                                    addedStockMap[targetId] = (addedStockMap[targetId] || 0) + Number(i.quantity);
                                 });
                             }
                         });
@@ -2333,7 +2530,8 @@
                             const btTime = bt.timestamp || new Date(bt.date + 'T12:00:00').getTime();
                             if (btTime > lastInvTimestamp) {
                                 bt.items.forEach(i => {
-                                    movedStockMap[i.productId] = (movedStockMap[i.productId] || 0) + Number(i.quantity);
+                                    const targetId = this.resolveUnifiedGroupId(i.productId);
+                                    movedStockMap[targetId] = (movedStockMap[targetId] || 0) + Number(i.quantity);
                                 });
                             }
                         });
@@ -2344,7 +2542,8 @@
                             const btTime = bt.timestamp || new Date(bt.date + 'T12:00:00').getTime();
                             if (btTime > lastInvTimestamp) {
                                 bt.items.forEach(i => {
-                                    movedStockMap[i.productId] = (movedStockMap[i.productId] || 0) - Number(i.quantity);
+                                    const targetId = this.resolveUnifiedGroupId(i.productId);
+                                    movedStockMap[targetId] = (movedStockMap[targetId] || 0) - Number(i.quantity);
                                 });
                             }
                         });
@@ -2357,14 +2556,16 @@
                             const psTime = ps.timestamp || new Date(ps.date + 'T12:00:00').getTime();
                             if (psTime > lastInvTimestamp) {
                                 ps.items.forEach(i => {
-                                    pendolariMap[i.productId] = (pendolariMap[i.productId] || 0) + Number(i.quantity);
+                                    const targetId = this.resolveUnifiedGroupId(i.productId);
+                                    pendolariMap[targetId] = (pendolariMap[targetId] || 0) + Number(i.quantity);
                                     const itemPrice = i.customPrice !== undefined ? Number(i.customPrice) : Number(i.pendolariPrice || 0);
-                                    pendolariRevMap[i.productId] = (pendolariRevMap[i.productId] || 0) + (Number(i.quantity) * itemPrice);
+                                    pendolariRevMap[targetId] = (pendolariRevMap[targetId] || 0) + (Number(i.quantity) * itemPrice);
                                 });
                             }
                         });
 
-                    this.currentInventoryRows = this.products.map(p => {
+                    const groupedProds = this.getGroupedSelectableProducts();
+                    this.currentInventoryRows = groupedProds.map(p => {
                         const initialQty = Number(initialStockMap[p.id] || 0);
                         const addedQty = Number(addedStockMap[p.id] || 0);
                         const movedQty = Number(movedStockMap[p.id] || 0);
@@ -2374,6 +2575,7 @@
 
                         return {
                             productId: p.id,
+                            displayId: p.id,
                             productName: p.name,
                             initialQty: initialQty,          
                             addedQty: addedQty,              
@@ -2409,8 +2611,6 @@
                     const effQty = this.getEffectivePendolariQty(row);
                     if (effQty <= 0) return 0;
 
-                    // Se esistono schede pendolari / buoni equipaggio & comando registrati per questo prodotto,
-                    // usa l'importo esatto registrato (quindi se scaricato a 0 €, restituisce esattamente 0,00 €!)
                     if (row.pendolariQty > 0 && row.explicitPendolariRev !== undefined) {
                         const proportion = Math.min(1, effQty / row.pendolariQty);
                         return Number(row.explicitPendolariRev) * proportion;
@@ -2455,6 +2655,8 @@
                         const expectedRev = this.getExpectedRevenueRow(row);
                         return {
                             productId: row.productId,
+                            displayId: row.displayId || row.productId,
+                            productName: row.productName,
                             initialQty: row.initialQty,
                             addedQty: row.addedQty,
                             movedQty: row.movedQty,
