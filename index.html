@@ -66,7 +66,7 @@
                     <i class="fa-solid fa-sailboat"></i> Flotta & Barche
                 </button>
                 <button @click="activeTab = 'prodotti'" :class="activeTab === 'prodotti' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-tags"></i> Listino
+                    <i class="fa-solid fa-tags"></i> Listini
                 </button>
                 <button @click="activeTab = 'storico'" :class="activeTab === 'storico' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-clock-rotate-left"></i> Storico & Stampa
@@ -348,14 +348,14 @@
         </div>
 
         <!-- ========================================================================= -->
-        <!-- 4. LISTINO PRODOTTI                                                       -->
+        <!-- 4. LISTINI SEPARATI (PENDOLARI, EQUIPAGGIO, COMANDO, PUBBLICO)            -->
         <!-- ========================================================================= -->
         <div x-show="activeTab === 'prodotti'" class="space-y-4">
-            <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-4 space-y-3">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-4 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <h2 class="text-base font-extrabold">Listino Prodotti & Prezzi (60 Articoli)</h2>
-                        <p class="text-[11px] text-slate-400">Costo, Prezzo Pendolari e Prezzo Pubblico.</p>
+                        <h2 class="text-base font-extrabold">Listini Prezzi Separati</h2>
+                        <p class="text-[11px] text-slate-400">I listini Pendolari ed Equipaggio sono già precaricati; il listino Comando è sempre a 0,00 €.</p>
                     </div>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <input type="text" x-model="searchFilter.products" placeholder="🔍 Cerca articolo..." :class="isDarkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-300'" class="border rounded-xl px-3 py-2 text-xs flex-1 sm:w-52">
@@ -363,29 +363,74 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                    <template x-for="p in filteredProducts" :key="p.id">
-                        <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'" class="border rounded-xl p-3 flex justify-between items-center gap-2">
-                            <div class="min-w-0">
-                                <p class="font-extrabold text-xs sm:text-sm truncate" x-text="p.name"></p>
-                                <div class="flex flex-wrap gap-x-2 text-[10px] mt-1">
-                                    <span class="text-amber-400 font-semibold">Costo: <strong x-text="formatCurrency(p.costPrice)"></strong></span>
-                                    <span class="text-sky-400 font-semibold">Pend: <strong x-text="formatCurrency(p.pendolariPrice)"></strong></span>
-                                    <span class="text-emerald-400 font-bold">Pub: <strong x-text="formatCurrency(p.sellPrice)"></strong></span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1 shrink-0">
-                                <button @click="editProduct(p)" class="text-blue-400 p-1.5"><i class="fa-solid fa-pen text-xs"></i></button>
-                                <button @click="deleteProduct(p.id)" class="text-red-400 p-1.5"><i class="fa-solid fa-trash text-xs"></i></button>
-                            </div>
-                        </div>
-                    </template>
+                <!-- Sotto-schede dedicate ai 3 listini -->
+                <div class="flex flex-wrap gap-2 border-b border-slate-800/80 pb-3">
+                    <button @click="listinoSubTab = 'tutti'" :class="listinoSubTab === 'tutti' ? 'bg-blue-600 text-white shadow' : 'bg-slate-800 text-slate-300 hover:text-white'" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group"></i> Tutti i Listini
+                    </button>
+                    <button @click="listinoSubTab = 'pendolari'" :class="listinoSubTab === 'pendolari' ? 'bg-sky-600 text-white shadow' : 'bg-sky-950/60 border border-sky-500/30 text-sky-300 hover:bg-sky-900/60'" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-ticket"></i> Listino Pendolari
+                    </button>
+                    <button @click="listinoSubTab = 'equipaggio'" :class="listinoSubTab === 'equipaggio' ? 'bg-orange-600 text-white shadow' : 'bg-orange-950/60 border border-orange-500/30 text-orange-300 hover:bg-orange-900/60'" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-users-gear"></i> Listino Equipaggio
+                    </button>
+                    <button @click="listinoSubTab = 'comando'" :class="listinoSubTab === 'comando' ? 'bg-rose-600 text-white shadow' : 'bg-rose-950/60 border border-rose-500/30 text-rose-300 hover:bg-rose-900/60'" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-anchor"></i> Listino Comando (0,00 €)
+                    </button>
+                </div>
+
+                <!-- Vista Tabella Rapida per modificare i prezzi direttamente -->
+                <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-300'" class="border rounded-2xl overflow-hidden">
+                    <div class="max-h-[62vh] overflow-y-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead :class="isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-800' : 'bg-slate-200 text-slate-700 border-slate-300'" class="sticky top-0 z-10 border-b font-extrabold uppercase text-[10px]">
+                                <tr>
+                                    <th class="p-3">Articolo</th>
+                                    <th x-show="listinoSubTab === 'tutti'" class="p-3 text-center text-amber-400">Costo €</th>
+                                    <th x-show="listinoSubTab === 'tutti' || listinoSubTab === 'pendolari'" class="p-3 text-center text-sky-400">Listino Pendolari €</th>
+                                    <th x-show="listinoSubTab === 'tutti' || listinoSubTab === 'equipaggio'" class="p-3 text-center text-orange-400">Listino Equipaggio €</th>
+                                    <th x-show="listinoSubTab === 'comando'" class="p-3 text-center text-rose-400">Listino Comando €</th>
+                                    <th x-show="listinoSubTab === 'tutti'" class="p-3 text-center text-emerald-400">Pubblico €</th>
+                                    <th class="p-3 text-right">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody :class="isDarkMode ? 'divide-slate-800/70' : 'divide-slate-200'" class="divide-y">
+                                <template x-for="p in filteredProducts" :key="p.id">
+                                    <tr :class="isDarkMode ? 'hover:bg-slate-900/60' : 'hover:bg-white'" class="transition">
+                                        <td class="p-2.5 font-extrabold">
+                                            <span x-text="p.name"></span>
+                                            <span class="block text-[10px] text-slate-400 font-normal" x-text="p.category"></span>
+                                        </td>
+                                        <td x-show="listinoSubTab === 'tutti'" class="p-2 text-center">
+                                            <input type="number" step="0.01" min="0" x-model.number="p.costPrice" @change="saveToLocalStorage()" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-white border-slate-300 text-amber-700'" class="w-20 border rounded-lg text-center font-bold py-1 text-xs">
+                                        </td>
+                                        <td x-show="listinoSubTab === 'tutti' || listinoSubTab === 'pendolari'" class="p-2 text-center">
+                                            <input type="number" step="0.01" min="0" x-model.number="p.pendolariPrice" @change="onInlinePriceUpdate(p, 'pendolari')" :class="isDarkMode ? 'bg-slate-900 border-sky-500/40 text-sky-400' : 'bg-white border-sky-400 text-sky-700'" class="w-20 border rounded-lg text-center font-black py-1 text-xs">
+                                        </td>
+                                        <td x-show="listinoSubTab === 'tutti' || listinoSubTab === 'equipaggio'" class="p-2 text-center">
+                                            <input type="number" step="0.01" min="0" x-model.number="p.equipaggioPrice" @change="onInlinePriceUpdate(p, 'equipaggio')" :class="isDarkMode ? 'bg-slate-900 border-orange-500/40 text-orange-400' : 'bg-white border-orange-400 text-orange-700'" class="w-20 border rounded-lg text-center font-black py-1 text-xs">
+                                        </td>
+                                        <td x-show="listinoSubTab === 'comando'" class="p-2 text-center">
+                                            <span class="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-400 font-black">0,00 €</span>
+                                        </td>
+                                        <td x-show="listinoSubTab === 'tutti'" class="p-2 text-center">
+                                            <input type="number" step="0.01" min="0" x-model.number="p.sellPrice" @change="saveToLocalStorage()" :class="isDarkMode ? 'bg-slate-900 border-emerald-500/40 text-emerald-400' : 'bg-white border-emerald-400 text-emerald-700'" class="w-20 border rounded-lg text-center font-black py-1 text-xs">
+                                        </td>
+                                        <td class="p-2.5 text-right">
+                                            <button @click="editProduct(p)" class="text-blue-400 hover:text-blue-300 p-1.5" title="Modifica"><i class="fa-solid fa-pen text-xs"></i></button>
+                                            <button @click="deleteProduct(p.id)" class="text-red-400 hover:text-red-300 p-1.5" title="Elimina"><i class="fa-solid fa-trash text-xs"></i></button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- ========================================================================= -->
-        <!-- 5. STORICO DOCUMENTI                                                      -->
+        <!-- 5. STORICO DOCUMENTI (CON DISTINZIONE PENDOLARI / EQUIPAGGIO / COMANDO)    -->
         <!-- ========================================================================= -->
         <div x-show="activeTab === 'storico'" class="space-y-4">
             <div class="flex flex-wrap gap-1.5">
@@ -472,8 +517,11 @@
                 <template x-for="ps in pendolariSheets.slice().reverse()" :key="ps.id">
                     <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-3.5 flex justify-between items-center">
                         <div>
-                            <span class="font-extrabold text-sm" x-text="getBoatName(ps.boatId) + ' • ' + (ps.sheetType === 'equipaggio' ? 'Buono Equipaggio e Ponte Comando' : 'Scheda Pendolari')"></span>
-                            <p class="text-xs text-slate-400" x-text="ps.date + (ps.notes ? ' • ' + ps.notes : '') + ' • Tot: ' + formatCurrency(getPendolariSheetTotal(ps))"></p>
+                            <div class="flex items-center gap-2">
+                                <span class="font-extrabold text-sm" x-text="getBoatName(ps.boatId)"></span>
+                                <span :class="ps.sheetType === 'comando' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : (ps.sheetType === 'equipaggio' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-sky-500/20 text-sky-400 border-sky-500/30')" class="border px-2 py-0.5 rounded-lg text-[10px] font-black uppercase" x-text="getSheetTypeLabel(ps.sheetType)"></span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1" x-text="ps.date + (ps.notes ? ' • ' + ps.notes : '') + ' • Totale: ' + formatCurrency(getPendolariSheetTotal(ps))"></p>
                         </div>
                         <button @click="deletePendolariSheet(ps.id)" class="text-red-400 p-1.5"><i class="fa-solid fa-trash"></i></button>
                     </div>
@@ -499,7 +547,7 @@
         </button>
         <button @click="activeTab = 'prodotti'" :class="activeTab === 'prodotti' ? 'text-blue-400' : 'text-slate-400'" class="flex flex-col items-center justify-center py-1 gap-0.5">
             <i class="fa-solid fa-tags text-sm"></i>
-            <span class="text-[9px] font-bold">Listino</span>
+            <span class="text-[9px] font-bold">Listini</span>
         </button>
         <button @click="activeTab = 'storico'" :class="activeTab === 'storico' ? 'text-blue-400' : 'text-slate-400'" class="flex flex-col items-center justify-center py-1 gap-0.5">
             <i class="fa-solid fa-clock-rotate-left text-sm"></i>
@@ -607,7 +655,7 @@
                                         <th class="p-2 text-center text-blue-400">Teorica</th>
                                         <th class="p-2 text-center bg-emerald-600/15 text-emerald-400">Fisica (Rim.)</th>
                                         <th class="p-2 text-center text-amber-400">Venduti</th>
-                                        <th class="p-2 text-center text-sky-400">Pend./Buoni</th>
+                                        <th class="p-2 text-center text-sky-400">Buoni/Pen</th>
                                         <th class="p-2 text-right">P.zo Pub.</th>
                                         <th class="p-2.5 text-right text-emerald-400">Incasso Atteso</th>
                                     </tr>
@@ -729,17 +777,34 @@
                     </button>
                 </div>
 
-                <!-- TAB 3: SCHEDA PENDOLARI & EQUIPAGGIO -->
+                <!-- TAB 3: BUONI PENDOLARI, EQUIPAGGIO E COMANDO (SEPARATI CON 3 LISTINI DISTINTI) -->
                 <div x-show="boatHub.tab === 'pendolari'" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
-                        <button type="button" @click="pendolariForm.sheetType = 'pendolari'; onSheetTypeChange()" :class="pendolariForm.sheetType === 'pendolari' ? 'bg-sky-600 border-sky-400 text-white shadow-lg shadow-sky-500/20' : (isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-300 text-slate-600')" class="border-2 rounded-2xl p-3.5 flex flex-col items-center justify-center gap-1.5 transition">
-                            <i class="fa-solid fa-ticket text-xl"></i>
-                            <span class="font-black text-xs sm:text-sm">Scheda Pendolari</span>
+                    <!-- 3 Pulsanti Separati -->
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <!-- 1. PENDOLARI -->
+                        <button type="button" @click="pendolariForm.sheetType = 'pendolari'; onSheetTypeChange()" :class="pendolariForm.sheetType === 'pendolari' ? 'bg-sky-600 border-sky-400 text-white shadow-lg shadow-sky-500/20' : (isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-400 hover:border-sky-500/40' : 'bg-slate-100 border-slate-300 text-slate-600')" class="border-2 rounded-2xl p-3 flex flex-col items-center justify-center gap-1 transition">
+                            <i class="fa-solid fa-ticket text-lg sm:text-xl"></i>
+                            <span class="font-black text-xs sm:text-sm">Pendolari</span>
+                            <span class="text-[10px] opacity-80 font-semibold">Listino Pendolari</span>
                         </button>
-                        <button type="button" @click="pendolariForm.sheetType = 'equipaggio'; onSheetTypeChange()" :class="pendolariForm.sheetType === 'equipaggio' ? 'bg-amber-600 border-amber-400 text-white shadow-lg shadow-amber-500/20' : (isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-300 text-slate-600')" class="border-2 rounded-2xl p-3.5 flex flex-col items-center justify-center gap-1.5 transition">
-                            <i class="fa-solid fa-anchor text-xl"></i>
-                            <span class="font-black text-xs sm:text-sm text-center">Equipaggio / Comando</span>
+                        <!-- 2. EQUIPAGGIO -->
+                        <button type="button" @click="pendolariForm.sheetType = 'equipaggio'; onSheetTypeChange()" :class="pendolariForm.sheetType === 'equipaggio' ? 'bg-orange-600 border-orange-400 text-white shadow-lg shadow-orange-500/20' : (isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-400 hover:border-orange-500/40' : 'bg-slate-100 border-slate-300 text-slate-600')" class="border-2 rounded-2xl p-3 flex flex-col items-center justify-center gap-1 transition">
+                            <i class="fa-solid fa-users-gear text-lg sm:text-xl"></i>
+                            <span class="font-black text-xs sm:text-sm">Equipaggio</span>
+                            <span class="text-[10px] opacity-80 font-semibold">Listino Equipaggio</span>
                         </button>
+                        <!-- 3. COMANDO -->
+                        <button type="button" @click="pendolariForm.sheetType = 'comando'; onSheetTypeChange()" :class="pendolariForm.sheetType === 'comando' ? 'bg-rose-600 border-rose-400 text-white shadow-lg shadow-rose-500/20' : (isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-400 hover:border-rose-500/40' : 'bg-slate-100 border-slate-300 text-slate-600')" class="border-2 rounded-2xl p-3 flex flex-col items-center justify-center gap-1 transition">
+                            <i class="fa-solid fa-anchor text-lg sm:text-xl"></i>
+                            <span class="font-black text-xs sm:text-sm">Comando</span>
+                            <span class="text-[10px] opacity-80 font-semibold">0,00 € (Omaggio)</span>
+                        </button>
+                    </div>
+
+                    <!-- Banner indicatore listino attivo -->
+                    <div :class="pendolariForm.sheetType === 'comando' ? 'bg-rose-950/50 border-rose-500/40 text-rose-300' : (pendolariForm.sheetType === 'equipaggio' ? 'bg-orange-950/50 border-orange-500/40 text-orange-300' : 'bg-sky-950/50 border-sky-500/40 text-sky-300')" class="border rounded-xl px-3.5 py-2 text-xs font-bold flex items-center justify-between">
+                        <span x-text="pendolariForm.sheetType === 'comando' ? '⚓ Ponte Comando: Listino fisso a 0,00 €' : (pendolariForm.sheetType === 'equipaggio' ? '👷 Buono Equipaggio: Prezzi dal Listino Equipaggio' : '🎟️ Scheda Pendolari: Prezzi dal Listino Pendolari')"></span>
+                        <span class="uppercase text-[10px] px-2 py-0.5 rounded bg-black/30" x-text="pendolariForm.sheetType"></span>
                     </div>
 
                     <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'" class="border rounded-2xl p-4 space-y-3 shadow-inner">
@@ -749,7 +814,7 @@
                                 <select x-model="currentPendolariItem.productId" @change="onPendolariProductSelect()" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border-2 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-bold focus:border-sky-500 focus:outline-none">
                                     <option value="">-- Scegli prodotto --</option>
                                     <template x-for="p in getGroupedSelectableProducts()" :key="p.id">
-                                        <option :value="p.id" x-text="p.name"></option>
+                                        <option :value="p.id" x-text="p.name + ' (' + formatCurrency(getProductPriceBySheetType(p, pendolariForm.sheetType)) + ')'"></option>
                                     </template>
                                 </select>
                             </div>
@@ -764,14 +829,14 @@
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-extrabold uppercase text-slate-400 mb-1">Prezzo Unità €</label>
-                                    <input type="number" step="0.01" min="0" x-model.number="currentPendolariItem.customPrice" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-sky-400' : 'bg-white border-slate-300'" class="w-full border-2 rounded-xl text-center font-black text-xs sm:text-sm h-10 px-2" placeholder="0.00">
+                                    <input type="number" step="0.01" min="0" x-model.number="currentPendolariItem.customPrice" :readonly="pendolariForm.sheetType === 'comando'" :class="[isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-300', pendolariForm.sheetType === 'comando' ? 'text-rose-400 opacity-75 cursor-not-allowed' : (pendolariForm.sheetType === 'equipaggio' ? 'text-orange-400' : 'text-sky-400')]" class="w-full border-2 rounded-xl text-center font-black text-xs sm:text-sm h-10 px-2" placeholder="0.00">
                                 </div>
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-[11px] font-extrabold uppercase text-slate-400 mb-1">Note / Nominativo / Riferimento</label>
-                            <input type="text" x-model="pendolariForm.notes" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border-2 rounded-xl px-3 py-2 text-xs font-bold" placeholder="es. Mario Rossi / Servizio Ponte Comando">
+                            <input type="text" x-model="pendolariForm.notes" :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'" class="w-full border-2 rounded-xl px-3 py-2 text-xs font-bold" :placeholder="pendolariForm.sheetType === 'comando' ? 'es. Ponte Comando / Comandante' : (pendolariForm.sheetType === 'equipaggio' ? 'es. Marinai / Personale di bordo' : 'es. Mario Rossi / Abbonamento')">
                         </div>
 
                         <button type="button" @click="addPendolariItem()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-extrabold text-xs sm:text-sm shadow transition flex items-center justify-center gap-2">
@@ -799,10 +864,10 @@
 
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-slate-800">
                         <div>
-                            <span class="text-xs text-slate-400 block font-bold uppercase">Totale Documento</span>
-                            <span class="text-xl font-black text-sky-400" x-text="formatCurrency(getPendolariSheetTotal(pendolariForm))"></span>
+                            <span class="text-xs text-slate-400 block font-bold uppercase">Totale Documento (<span x-text="getSheetTypeLabel(pendolariForm.sheetType)"></span>)</span>
+                            <span class="text-xl font-black" :class="pendolariForm.sheetType === 'comando' ? 'text-rose-400' : (pendolariForm.sheetType === 'equipaggio' ? 'text-orange-400' : 'text-sky-400')" x-text="formatCurrency(getPendolariSheetTotal(pendolariForm))"></span>
                         </div>
-                        <button type="button" @click="savePendolariSheetFromHub()" class="w-full sm:w-auto bg-sky-600 hover:bg-sky-500 text-white px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-xl transition">
+                        <button type="button" @click="savePendolariSheetFromHub()" :class="pendolariForm.sheetType === 'comando' ? 'bg-rose-600 hover:bg-rose-500' : (pendolariForm.sheetType === 'equipaggio' ? 'bg-orange-600 hover:bg-orange-500' : 'bg-sky-600 hover:bg-sky-500')" class="w-full sm:w-auto text-white px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-xl transition">
                             <i class="fa-solid fa-floppy-disk mr-1.5"></i> Salva e Registra Documento
                         </button>
                     </div>
@@ -881,27 +946,32 @@
         </div>
     </div>
 
-    <!-- MODAL PRODOTTO -->
+    <!-- MODAL PRODOTTO (CON LISTINI SEPARATI: COSTO, PENDOLARI, EQUIPAGGIO, PUBBLICO) -->
     <div x-show="productModal.open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 no-print" x-cloak>
         <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-3 shadow-2xl text-white">
-            <h3 class="text-base font-extrabold" x-text="productModal.isEdit ? 'Modifica Prodotto' : 'Nuovo Prodotto'"></h3>
+            <h3 class="text-base font-extrabold" x-text="productModal.isEdit ? 'Modifica Prodotto & Listini' : 'Nuovo Prodotto'"></h3>
             <form @submit.prevent="saveProduct()" class="space-y-3">
                 <input type="text" x-model="productModal.form.name" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold" placeholder="Nome Prodotto">
                 <input type="text" x-model="productModal.form.category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs" placeholder="Categoria">
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-2 gap-2.5">
                     <div>
-                        <label class="text-[10px] text-amber-400 block mb-1">Costo €</label>
-                        <input type="number" step="0.01" min="0" x-model.number="productModal.form.costPrice" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-xs font-bold">
+                        <label class="text-[10px] font-bold text-amber-400 block mb-1">Costo Acquisto €</label>
+                        <input type="number" step="0.01" min="0" x-model.number="productModal.form.costPrice" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs font-bold">
                     </div>
                     <div>
-                        <label class="text-[10px] text-sky-400 block mb-1">Pendolari €</label>
-                        <input type="number" step="0.01" min="0" x-model.number="productModal.form.pendolariPrice" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-xs font-bold">
+                        <label class="text-[10px] font-bold text-emerald-400 block mb-1">Listino Pubblico €</label>
+                        <input type="number" step="0.01" min="0" x-model.number="productModal.form.sellPrice" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs font-bold">
                     </div>
                     <div>
-                        <label class="text-[10px] text-emerald-400 block mb-1">Pubblico €</label>
-                        <input type="number" step="0.01" min="0" x-model.number="productModal.form.sellPrice" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-xs font-bold">
+                        <label class="text-[10px] font-bold text-sky-400 block mb-1">Listino Pendolari €</label>
+                        <input type="number" step="0.01" min="0" x-model.number="productModal.form.pendolariPrice" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-orange-400 block mb-1">Listino Equipaggio €</label>
+                        <input type="number" step="0.01" min="0" x-model.number="productModal.form.equipaggioPrice" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs font-bold">
                     </div>
                 </div>
+                <p class="text-[10px] text-rose-400 font-semibold"><i class="fa-solid fa-circle-info mr-1"></i>Nota: Il listino Ponte Comando è impostato automaticamente a 0,00 €.</p>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" @click="productModal.open = false" class="bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold">Annulla</button>
                     <button type="submit" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold">Salva</button>
@@ -1032,7 +1102,7 @@
                             <th class="p-1.5 border border-slate-700 text-center">Teorica</th>
                             <th class="p-1.5 border border-slate-700 text-center">Fisica</th>
                             <th class="p-1.5 border border-slate-700 text-center">Venduti</th>
-                            <th class="p-1.5 border border-slate-700 text-center">Pend/Buoni</th>
+                            <th class="p-1.5 border border-slate-700 text-center">Buoni/Pen</th>
                             <th class="p-1.5 border border-slate-700 text-right">P.zo Pub.</th>
                             <th class="p-1.5 border border-slate-700 text-right">Incasso Atteso</th>
                         </tr>
@@ -1065,6 +1135,7 @@
                 isDarkMode: true,
                 activeTab: 'dashboard',
                 historySubTab: 'inventari',
+                listinoSubTab: 'tutti',
                 products: [],
                 warehouseLoads: [],
                 boats: [],
@@ -1104,7 +1175,7 @@
                 boatTransferForm: { bollaNumber: '', date: new Date().toISOString().split('T')[0], fromBoatId: '', toBoatId: '', destinationCity: 'NAPOLI', items: [] },
                 currentBoatTransferItem: { productId: '', quantity: '' },
 
-                productModal: { open: false, isEdit: false, form: { id: '', name: '', category: '', unit: 'Pz', costPrice: 0, pendolariPrice: 0, sellPrice: 0 } },
+                productModal: { open: false, isEdit: false, form: { id: '', name: '', category: '', unit: 'Pz', costPrice: 0, pendolariPrice: 0, equipaggioPrice: 0, sellPrice: 0 } },
                 boatModal: { open: false, isEdit: false, form: { id: '', name: '', skipper: '', notes: '' } },
                 printModal: { open: false, title: '', docNumber: '', date: '', destination: '', destinationCity: 'NAPOLI', items: [] },
                 inventoryPrintModal: { open: false, data: null },
@@ -1114,17 +1185,18 @@
                 currentInventoryRows: [],
                 actualRevenueInput: 0,
 
+                // Gruppi con listini separati: pendolariPrice e equipaggioPrice (Comando sempre 0)
                 productGroups: [
-                    { groupId: 'grp_lattine', name: 'Lattine 🥤', memberIds: ['p_ltn_1', 'p_ltn_2', 'p_ltn_3', 'p_ltn_4', 'p_ltn_5', 'p_ltn_6', 'p_ltn_7'], pendolariPrice: 1.5, sellPrice: 3.5 },
-                    { groupId: 'grp_biscotti', name: 'Biscotti 🍪', memberIds: ['p_rin_1', 'p_rin_2', 'p_rin_3'], pendolariPrice: 1.0, sellPrice: 2.5 },
-                    { groupId: 'grp_acqua', name: 'Acqua 💧', memberIds: ['p_acq_nat', 'p_acq_fri'], pendolariPrice: 1.0, sellPrice: 2.0 },
-                    { groupId: 'grp_caramelle', name: 'Caramelle e Gomme 🍬', memberIds: ['p_car_1', 'p_car_2'], pendolariPrice: 1.0, sellPrice: 2.5 },
-                    { groupId: 'grp_patatine', name: 'Patatine e Fonzies 🍟', memberIds: ['p_fon_1', 'p_fon_2'], pendolariPrice: 1.5, sellPrice: 2.5 },
-                    { groupId: 'grp_vino', name: 'Vino e Prosecco 🍷', memberIds: ['p_vin_1', 'p_vin_2'], pendolariPrice: 3.0, sellPrice: 6.0 },
-                    { groupId: 'grp_energy', name: 'Red Bull e Gatorade ⚡', memberIds: ['p_red_1', 'p_red_2'], pendolariPrice: 2.5, sellPrice: 4.5 },
-                    { groupId: 'grp_salati', name: 'Ritz e Cipster 🍪', memberIds: ['p_rit_1', 'p_rit_2'], pendolariPrice: 2.5, sellPrice: 4.5 },
-                    { groupId: 'grp_cioccolato', name: 'Cioccolato 🍫', memberIds: ['p_twi_1', 'p_twi_2', 'p_twi_3', 'p_twi_4', 'p_twi_5'], pendolariPrice: 1.0, sellPrice: 2.5 },
-                    { groupId: 'grp_snack_dolci', name: 'Snack Dolci 🍫', memberIds: ['p_bue_1', 'p_bue_2', 'p_bue_3', 'p_kin'], pendolariPrice: 1.5, sellPrice: 3.0 }
+                    { groupId: 'grp_lattine', name: 'Lattine 🥤', memberIds: ['p_ltn_1', 'p_ltn_2', 'p_ltn_3', 'p_ltn_4', 'p_ltn_5', 'p_ltn_6', 'p_ltn_7'], pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.5 },
+                    { groupId: 'grp_biscotti', name: 'Biscotti 🍪', memberIds: ['p_rin_1', 'p_rin_2', 'p_rin_3'], pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                    { groupId: 'grp_acqua', name: 'Acqua 💧', memberIds: ['p_acq_nat', 'p_acq_fri'], pendolariPrice: 1.0, equipaggioPrice: 0.5, sellPrice: 2.0 },
+                    { groupId: 'grp_caramelle', name: 'Caramelle e Gomme 🍬', memberIds: ['p_car_1', 'p_car_2'], pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                    { groupId: 'grp_patatine', name: 'Patatine e Fonzies 🍟', memberIds: ['p_fon_1', 'p_fon_2'], pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 2.5 },
+                    { groupId: 'grp_vino', name: 'Vino e Prosecco 🍷', memberIds: ['p_vin_1', 'p_vin_2'], pendolariPrice: 3.0, equipaggioPrice: 2.5, sellPrice: 6.0 },
+                    { groupId: 'grp_energy', name: 'Red Bull e Gatorade ⚡', memberIds: ['p_red_1', 'p_red_2'], pendolariPrice: 2.5, equipaggioPrice: 1.5, sellPrice: 4.5 },
+                    { groupId: 'grp_salati', name: 'Ritz e Cipster 🍪', memberIds: ['p_rit_1', 'p_rit_2'], pendolariPrice: 2.5, equipaggioPrice: 1.5, sellPrice: 4.5 },
+                    { groupId: 'grp_cioccolato', name: 'Cioccolato 🍫', memberIds: ['p_twi_1', 'p_twi_2', 'p_twi_3', 'p_twi_4', 'p_twi_5'], pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                    { groupId: 'grp_snack_dolci', name: 'Snack Dolci 🍫', memberIds: ['p_bue_1', 'p_bue_2', 'p_bue_3', 'p_kin'], pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.0 }
                 ],
 
                 getGroupInfoForProduct(productId) {
@@ -1142,13 +1214,45 @@
                         if (grp) {
                             if (!addedGroups.has(grp.groupId)) {
                                 addedGroups.add(grp.groupId);
-                                result.push({ id: grp.groupId, name: grp.name, pendolariPrice: grp.pendolariPrice, sellPrice: grp.sellPrice, costPrice: p.costPrice });
+                                const member = this.products.find(x => grp.memberIds.includes(x.id)) || p;
+                                const eqPrice = member.equipaggioPrice !== undefined ? member.equipaggioPrice : grp.equipaggioPrice;
+                                const penPrice = member.pendolariPrice !== undefined ? member.pendolariPrice : grp.pendolariPrice;
+                                result.push({ id: grp.groupId, name: grp.name, pendolariPrice: penPrice, equipaggioPrice: eqPrice, sellPrice: grp.sellPrice, costPrice: p.costPrice });
                             }
                         } else {
                             result.push(p);
                         }
                     });
                     return result;
+                },
+
+                // Calcolo prezzo in base al listino selezionato (Pendolari, Equipaggio o Comando = 0)
+                getProductPriceBySheetType(item, sheetType) {
+                    if (sheetType === 'comando') return 0;
+                    if (!item) return 0;
+                    if (sheetType === 'equipaggio') {
+                        return item.equipaggioPrice !== undefined ? Number(item.equipaggioPrice) : Number(item.pendolariPrice || 0);
+                    }
+                    return Number(item.pendolariPrice || 0);
+                },
+
+                getSheetTypeLabel(type) {
+                    if (type === 'comando') return 'Ponte Comando (0 €)';
+                    if (type === 'equipaggio') return 'Buono Equipaggio';
+                    return 'Scheda Pendolari';
+                },
+
+                onInlinePriceUpdate(product, field) {
+                    const grp = this.getGroupInfoForProduct(product.id);
+                    if (grp) {
+                        this.products.forEach(p => {
+                            if (grp.memberIds.includes(p.id)) {
+                                if (field === 'pendolari') p.pendolariPrice = product.pendolariPrice;
+                                if (field === 'equipaggio') p.equipaggioPrice = product.equipaggioPrice;
+                            }
+                        });
+                    }
+                    this.saveToLocalStorage();
                 },
 
                 initData() {
@@ -1173,68 +1277,79 @@
 
                     if (this.products.length < 50) {
                         this.products = [
-                            { id: 'p_acq_nat', name: 'Acqua Naturale 💧', category: 'Bevande', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
-                            { id: 'p_acq_fri', name: 'Acqua Frizzante 🫧', category: 'Bevande', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
-                            { id: 'p_acq_eq', name: 'ACQUA EQUIPAGGIO ⚓', category: 'Bevande', unit: 'Pz', costPrice: 0.3, pendolariPrice: 0.5, sellPrice: 1.0 },
-                            { id: 'p_ara', name: 'Arachidi / Frutta S. 🥜', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_bp', name: 'Borse Piccole 👜', category: 'Gadget', unit: 'Pz', costPrice: 3.0, pendolariPrice: 6.0, sellPrice: 6.0 },
-                            { id: 'p_bg', name: 'Borse Grandi 👜', category: 'Gadget', unit: 'Pz', costPrice: 5.0, pendolariPrice: 10.0, sellPrice: 10.0 },
-                            { id: 'p_bue_1', name: 'Bueno 🍫', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
-                            { id: 'p_bue_2', name: 'B-Ready 🍫', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
-                            { id: 'p_bue_3', name: 'Biscuits 🍫', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
-                            { id: 'p_cap', name: 'Cappelli 🧢', category: 'Gadget', unit: 'Pz', costPrice: 2.5, pendolariPrice: 5.0, sellPrice: 5.0 },
-                            { id: 'p_car_1', name: 'Caramelle 🍬', category: 'Snack', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_car_2', name: 'Gomme 🍬', category: 'Snack', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_cia', name: 'Cialde ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
-                            { id: 'p_die', name: 'Dietor 🍬', category: 'Caffetteria', unit: 'Pz', costPrice: 0.0, pendolariPrice: 0.0, sellPrice: 0.0 },
-                            { id: 'p_fit', name: 'Fitness / Cereal Yo 🌾', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_fon_1', name: 'Fonzies 🍟', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_fon_2', name: 'Patatine 🍟', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_imp', name: 'Impermeabili 🧥', category: 'Gadget', unit: 'Pz', costPrice: 2.0, pendolariPrice: 3.25, sellPrice: 3.5 },
-                            { id: 'p_kin', name: 'Kinder Cards 🃏', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_lat', name: 'Latte 🥛', category: 'Caffetteria', unit: 'Pz', costPrice: 0.2, pendolariPrice: 0.5, sellPrice: 0.5 },
-                            { id: 'p_ltn_1', name: 'Coca Cola 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_2', name: 'Coca 0 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_3', name: 'Fanta 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_4', name: 'Sprite 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_5', name: 'Lemonsoda 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_6', name: 'Thé Pesca 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_7', name: 'Thé Limone 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_mag', name: 'Maglie 👕', category: 'Gadget', unit: 'Pz', costPrice: 2.5, pendolariPrice: 5.0, sellPrice: 5.0 },
-                            { id: 'p_mik', name: 'Mikado 🥖', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
-                            { id: 'p_muf', name: 'Muffin 🧁', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 3.0 },
-                            { id: 'p_nik', name: 'Nik Nok 🥜', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_pav', name: 'Pavesini 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_per', name: 'Peroni 🍺', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 4.5 },
-                            { id: 'p_pec', name: 'Peroni Capri 🍋', category: 'Bevande', unit: 'Pz', costPrice: 3.5, pendolariPrice: 7.5, sellPrice: 7.5 },
-                            { id: 'p_pri', name: 'Pringles 🥔', category: 'Snack', unit: 'Pz', costPrice: 1.2, pendolariPrice: 2.0, sellPrice: 3.5 },
-                            { id: 'p_vin_1', name: 'Prosecco 🍷', category: 'Bevande', unit: 'Pz', costPrice: 2.0, pendolariPrice: 3.0, sellPrice: 6.0 },
-                            { id: 'p_vin_2', name: 'Vino 🍷', category: 'Bevande', unit: 'Pz', costPrice: 2.0, pendolariPrice: 3.0, sellPrice: 6.0 },
-                            { id: 'p_red_1', name: 'Red Bull ⚡', category: 'Bevande', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
-                            { id: 'p_red_2', name: 'Gatorade ⚡', category: 'Bevande', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
-                            { id: 'p_rin_1', name: 'Ringo 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_rin_2', name: 'Oreo 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_rin_3', name: 'Baiocchi 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_rit_1', name: 'Ritz 🍪', category: 'Snack', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
-                            { id: 'p_rit_2', name: 'Cipster 🍪', category: 'Snack', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
-                            { id: 'p_spr', name: 'Spritz 🍹', category: 'Bevande', unit: 'Pz', costPrice: 3.0, pendolariPrice: 8.0, sellPrice: 8.0 },
-                            { id: 'p_suc', name: 'Succo 🧃', category: 'Bevande', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 3.5 },
-                            { id: 'p_the', name: 'The Camomilla 🍵', category: 'Bevande', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_tuc', name: 'Tuc 🍪', category: 'Snack', unit: 'Pz', costPrice: 1.2, pendolariPrice: 2.0, sellPrice: 4.0 },
-                            { id: 'p_twi_1', name: 'Twix 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_twi_2', name: 'M&M 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_twi_3', name: 'KitKat 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_twi_4', name: 'Mars 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_twi_5', name: 'Snickers 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_clm', name: 'Calamite 🧲', category: 'Gadget', unit: 'Pz', costPrice: 1.5, pendolariPrice: 3.0, sellPrice: 3.0 },
-                            { id: 'p_ptc', name: 'Portachiavi 🔑', category: 'Gadget', unit: 'Pz', costPrice: 1.5, pendolariPrice: 3.0, sellPrice: 3.0 },
-                            { id: 'p_cuc', name: 'Cucchiaio 🥄', category: 'Gadget', unit: 'Pz', costPrice: 1.5, pendolariPrice: 3.0, sellPrice: 3.0 },
-                            { id: 'p_cos', name: 'Costumi 🩳', category: 'Gadget', unit: 'Pz', costPrice: 2.5, pendolariPrice: 5.0, sellPrice: 5.0 },
-                            { id: 'p_dec', name: 'Decaffeinato ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 1.0, pendolariPrice: 2.5, sellPrice: 2.5 },
-                            { id: 'p_gin', name: 'Ginseng ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 1.0, pendolariPrice: 2.5, sellPrice: 2.5 },
-                            { id: 'p_orz', name: 'Orzo ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 1.0, pendolariPrice: 2.5, sellPrice: 2.5 }
+                            { id: 'p_acq_nat', name: 'Acqua Naturale 💧', category: 'Bevande', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, equipaggioPrice: 0.5, sellPrice: 2.0 },
+                            { id: 'p_acq_fri', name: 'Acqua Frizzante 🫧', category: 'Bevande', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, equipaggioPrice: 0.5, sellPrice: 2.0 },
+                            { id: 'p_acq_eq', name: 'ACQUA EQUIPAGGIO ⚓', category: 'Bevande', unit: 'Pz', costPrice: 0.3, pendolariPrice: 0.5, equipaggioPrice: 0.3, sellPrice: 1.0 },
+                            { id: 'p_ara', name: 'Arachidi / Frutta S. 🥜', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_bp', name: 'Borse Piccole 👜', category: 'Gadget', unit: 'Pz', costPrice: 3.0, pendolariPrice: 6.0, equipaggioPrice: 4.0, sellPrice: 6.0 },
+                            { id: 'p_bg', name: 'Borse Grandi 👜', category: 'Gadget', unit: 'Pz', costPrice: 5.0, pendolariPrice: 10.0, equipaggioPrice: 6.0, sellPrice: 10.0 },
+                            { id: 'p_bue_1', name: 'Bueno 🍫', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.0 },
+                            { id: 'p_bue_2', name: 'B-Ready 🍫', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.0 },
+                            { id: 'p_bue_3', name: 'Biscuits 🍫', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.0 },
+                            { id: 'p_cap', name: 'Cappelli 🧢', category: 'Gadget', unit: 'Pz', costPrice: 2.5, pendolariPrice: 5.0, equipaggioPrice: 3.0, sellPrice: 5.0 },
+                            { id: 'p_car_1', name: 'Caramelle 🍬', category: 'Snack', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_car_2', name: 'Gomme 🍬', category: 'Snack', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_cia', name: 'Cialde ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 0.5, pendolariPrice: 1.0, equipaggioPrice: 0.6, sellPrice: 2.0 },
+                            { id: 'p_die', name: 'Dietor 🍬', category: 'Caffetteria', unit: 'Pz', costPrice: 0.0, pendolariPrice: 0.0, equipaggioPrice: 0.0, sellPrice: 0.0 },
+                            { id: 'p_fit', name: 'Fitness / Cereal Yo 🌾', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_fon_1', name: 'Fonzies 🍟', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_fon_2', name: 'Patatine 🍟', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_imp', name: 'Impermeabili 🧥', category: 'Gadget', unit: 'Pz', costPrice: 2.0, pendolariPrice: 3.25, equipaggioPrice: 2.5, sellPrice: 3.5 },
+                            { id: 'p_kin', name: 'Kinder Cards 🃏', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_lat', name: 'Latte 🥛', category: 'Caffetteria', unit: 'Pz', costPrice: 0.2, pendolariPrice: 0.5, equipaggioPrice: 0.3, sellPrice: 0.5 },
+                            { id: 'p_ltn_1', name: 'Coca Cola 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.5 },
+                            { id: 'p_ltn_2', name: 'Coca 0 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.5 },
+                            { id: 'p_ltn_3', name: 'Fanta 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.5 },
+                            { id: 'p_ltn_4', name: 'Sprite 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.5 },
+                            { id: 'p_ltn_5', name: 'Lemonsoda 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.5 },
+                            { id: 'p_ltn_6', name: 'Thé Pesca 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.5 },
+                            { id: 'p_ltn_7', name: 'Thé Limone 🥤', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.5 },
+                            { id: 'p_mag', name: 'Maglie 👕', category: 'Gadget', unit: 'Pz', costPrice: 2.5, pendolariPrice: 5.0, equipaggioPrice: 3.0, sellPrice: 5.0 },
+                            { id: 'p_mik', name: 'Mikado 🥖', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 3.0 },
+                            { id: 'p_muf', name: 'Muffin 🧁', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 3.0 },
+                            { id: 'p_nik', name: 'Nik Nok 🥜', category: 'Snack', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_pav', name: 'Pavesini 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_per', name: 'Peroni 🍺', category: 'Bevande', unit: 'Pz', costPrice: 1.0, pendolariPrice: 1.5, equipaggioPrice: 1.2, sellPrice: 4.5 },
+                            { id: 'p_pec', name: 'Peroni Capri 🍋', category: 'Bevande', unit: 'Pz', costPrice: 3.5, pendolariPrice: 7.5, equipaggioPrice: 4.0, sellPrice: 7.5 },
+                            { id: 'p_pri', name: 'Pringles 🥔', category: 'Snack', unit: 'Pz', costPrice: 1.2, pendolariPrice: 2.0, equipaggioPrice: 1.5, sellPrice: 3.5 },
+                            { id: 'p_vin_1', name: 'Prosecco 🍷', category: 'Bevande', unit: 'Pz', costPrice: 2.0, pendolariPrice: 3.0, equipaggioPrice: 2.5, sellPrice: 6.0 },
+                            { id: 'p_vin_2', name: 'Vino 🍷', category: 'Bevande', unit: 'Pz', costPrice: 2.0, pendolariPrice: 3.0, equipaggioPrice: 2.5, sellPrice: 6.0 },
+                            { id: 'p_red_1', name: 'Red Bull ⚡', category: 'Bevande', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, equipaggioPrice: 1.5, sellPrice: 4.5 },
+                            { id: 'p_red_2', name: 'Gatorade ⚡', category: 'Bevande', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, equipaggioPrice: 1.5, sellPrice: 4.5 },
+                            { id: 'p_rin_1', name: 'Ringo 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_rin_2', name: 'Oreo 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_rin_3', name: 'Baiocchi 🍪', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_rit_1', name: 'Ritz 🍪', category: 'Snack', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, equipaggioPrice: 1.5, sellPrice: 4.5 },
+                            { id: 'p_rit_2', name: 'Cipster 🍪', category: 'Snack', unit: 'Pz', costPrice: 1.5, pendolariPrice: 2.5, equipaggioPrice: 1.5, sellPrice: 4.5 },
+                            { id: 'p_spr', name: 'Spritz 🍹', category: 'Bevande', unit: 'Pz', costPrice: 3.0, pendolariPrice: 8.0, equipaggioPrice: 4.0, sellPrice: 8.0 },
+                            { id: 'p_suc', name: 'Succo 🧃', category: 'Bevande', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 3.5 },
+                            { id: 'p_the', name: 'The Camomilla 🍵', category: 'Bevande', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.5, equipaggioPrice: 1.0, sellPrice: 2.5 },
+                            { id: 'p_tuc', name: 'Tuc 🍪', category: 'Snack', unit: 'Pz', costPrice: 1.2, pendolariPrice: 2.0, equipaggioPrice: 1.5, sellPrice: 4.0 },
+                            { id: 'p_twi_1', name: 'Twix 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_twi_2', name: 'M&M 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_twi_3', name: 'KitKat 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_twi_4', name: 'Mars 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_twi_5', name: 'Snickers 🍫', category: 'Snack', unit: 'Pz', costPrice: 0.8, pendolariPrice: 1.0, equipaggioPrice: 0.8, sellPrice: 2.5 },
+                            { id: 'p_clm', name: 'Calamite 🧲', category: 'Gadget', unit: 'Pz', costPrice: 1.5, pendolariPrice: 3.0, equipaggioPrice: 2.0, sellPrice: 3.0 },
+                            { id: 'p_ptc', name: 'Portachiavi 🔑', category: 'Gadget', unit: 'Pz', costPrice: 1.5, pendolariPrice: 3.0, equipaggioPrice: 2.0, sellPrice: 3.0 },
+                            { id: 'p_cuc', name: 'Cucchiaio 🥄', category: 'Gadget', unit: 'Pz', costPrice: 1.5, pendolariPrice: 3.0, equipaggioPrice: 2.0, sellPrice: 3.0 },
+                            { id: 'p_cos', name: 'Costumi 🩳', category: 'Gadget', unit: 'Pz', costPrice: 2.5, pendolariPrice: 5.0, equipaggioPrice: 3.0, sellPrice: 5.0 },
+                            { id: 'p_dec', name: 'Decaffeinato ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 1.0, pendolariPrice: 2.5, equipaggioPrice: 1.2, sellPrice: 2.5 },
+                            { id: 'p_gin', name: 'Ginseng ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 1.0, pendolariPrice: 2.5, equipaggioPrice: 1.2, sellPrice: 2.5 },
+                            { id: 'p_orz', name: 'Orzo ☕', category: 'Caffetteria', unit: 'Pz', costPrice: 1.0, pendolariPrice: 2.5, equipaggioPrice: 1.2, sellPrice: 2.5 }
                         ];
                         this.saveToLocalStorage();
+                    } else {
+                        // Assicura retrocompatibilità equipaggioPrice su prodotti esistenti salvati in localStorage
+                        let updated = false;
+                        this.products.forEach(p => {
+                            if (p.equipaggioPrice === undefined) {
+                                const grp = this.getGroupInfoForProduct(p.id);
+                                p.equipaggioPrice = grp ? grp.equipaggioPrice : (p.pendolariPrice || 0);
+                                updated = true;
+                            }
+                        });
+                        if (updated) this.saveToLocalStorage();
                     }
 
                     const initialBoatNames = [
@@ -1361,24 +1476,36 @@
 
                 openProductModal() {
                     this.productModal.isEdit = false;
-                    this.productModal.form = { id: 'p_' + Date.now(), name: '', category: '', unit: 'Pz', costPrice: 0, pendolariPrice: 0, sellPrice: 0 };
+                    this.productModal.form = { id: 'p_' + Date.now(), name: '', category: '', unit: 'Pz', costPrice: 0, pendolariPrice: 0, equipaggioPrice: 0, sellPrice: 0 };
                     this.productModal.open = true;
                 },
                 editProduct(p) {
                     this.productModal.isEdit = true;
-                    this.productModal.form = { ...p };
+                    this.productModal.form = {
+                        ...p,
+                        equipaggioPrice: p.equipaggioPrice !== undefined ? p.equipaggioPrice : (p.pendolariPrice || 0)
+                    };
                     this.productModal.open = true;
                 },
                 saveProduct() {
                     if (this.productModal.isEdit) {
                         const i = this.products.findIndex(p => p.id === this.productModal.form.id);
                         if (i !== -1) this.products[i] = { ...this.productModal.form };
+                        const grp = this.getGroupInfoForProduct(this.productModal.form.id);
+                        if (grp) {
+                            this.products.forEach(p => {
+                                if (grp.memberIds.includes(p.id)) {
+                                    p.pendolariPrice = this.productModal.form.pendolariPrice;
+                                    p.equipaggioPrice = this.productModal.form.equipaggioPrice;
+                                }
+                            });
+                        }
                     } else {
                         this.products.push({ ...this.productModal.form });
                     }
                     this.productModal.open = false;
                     this.saveToLocalStorage();
-                    this.showNotify('Listino Aggiornato', 'Prodotto salvato.');
+                    this.showNotify('Listino Aggiornato', 'Prezzi Pendolari, Equipaggio e Pubblico salvati.');
                 },
                 deleteProduct(id) {
                     this.products = this.products.filter(p => p.id !== id);
@@ -1525,18 +1652,38 @@
                     this.saveToLocalStorage();
                 },
 
-                onSheetTypeChange() { this.onPendolariProductSelect(); },
+                // Gestione separata listini Pendolari / Equipaggio / Comando (0 €)
+                onSheetTypeChange() {
+                    if (this.pendolariForm.items.length > 0) {
+                        this.pendolariForm.items.forEach(item => {
+                            if (this.pendolariForm.sheetType === 'comando') {
+                                item.customPrice = 0;
+                            } else {
+                                const selectable = this.getGroupedSelectableProducts().find(x => x.id === item.productId) || this.products.find(x => x.id === item.productId);
+                                if (selectable) {
+                                    item.customPrice = this.getProductPriceBySheetType(selectable, this.pendolariForm.sheetType);
+                                }
+                            }
+                        });
+                    }
+                    this.onPendolariProductSelect();
+                },
                 onPendolariProductSelect() {
-                    if (this.pendolariForm.sheetType === 'equipaggio') { this.currentPendolariItem.customPrice = 0; return; }
-                    const grp = this.getGroupInfoForProduct(this.currentPendolariItem.productId);
-                    if (grp) { this.currentPendolariItem.customPrice = grp.pendolariPrice; return; }
-                    const p = this.products.find(x => x.id === this.currentPendolariItem.productId);
-                    this.currentPendolariItem.customPrice = p ? (p.pendolariPrice || 0) : 0;
+                    if (this.pendolariForm.sheetType === 'comando') {
+                        this.currentPendolariItem.customPrice = 0;
+                        return;
+                    }
+                    const selectable = this.getGroupedSelectableProducts().find(x => x.id === this.currentPendolariItem.productId) || this.products.find(x => x.id === this.currentPendolariItem.productId);
+                    if (selectable) {
+                        this.currentPendolariItem.customPrice = this.getProductPriceBySheetType(selectable, this.pendolariForm.sheetType);
+                    } else {
+                        this.currentPendolariItem.customPrice = 0;
+                    }
                 },
                 changePendolariQty(val) { this.currentPendolariItem.quantity = Math.max(1, Number(this.currentPendolariItem.quantity || 1) + val); },
                 addPendolariItem() {
                     if (!this.currentPendolariItem.productId) return;
-                    const price = this.pendolariForm.sheetType === 'equipaggio' ? 0 : Number(this.currentPendolariItem.customPrice || 0);
+                    const price = this.pendolariForm.sheetType === 'comando' ? 0 : Number(this.currentPendolariItem.customPrice || 0);
                     this.pendolariForm.items.push({ productId: this.currentPendolariItem.productId, quantity: Number(this.currentPendolariItem.quantity || 1), customPrice: price });
                     this.currentPendolariItem = { productId: '', quantity: 1, customPrice: 0 };
                 },
@@ -1546,10 +1693,10 @@
                     this.saveToLocalStorage();
                     this.pendolariForm.notes = ''; this.pendolariForm.items = [];
                     this.loadBoatInventoryData();
-                    this.showNotify('Salvato', 'Documento registrato.');
+                    this.showNotify('Salvato', `${this.getSheetTypeLabel(this.pendolariForm.sheetType)} registrato.`);
                 },
                 getPendolariSheetTotal(ps) {
-                    if (ps.sheetType === 'equipaggio') return 0;
+                    if (ps.sheetType === 'comando') return 0;
                     return ps.items.reduce((s, i) => s + (Number(i.quantity) * Number(i.customPrice || 0)), 0);
                 },
                 deletePendolariSheet(id) {
@@ -1585,7 +1732,7 @@
                         ps.items.forEach(i => {
                             const nid = this.getNormalizedGroupId(i.productId);
                             pendMap[nid] = (pendMap[nid] || 0) + Number(i.quantity || 0);
-                            const p = ps.sheetType === 'equipaggio' ? 0 : Number(i.customPrice || 0);
+                            const p = ps.sheetType === 'comando' ? 0 : Number(i.customPrice || 0);
                             pendRevMap[nid] = (pendRevMap[nid] || 0) + (Number(i.quantity || 0) * p);
                         });
                     });
@@ -1662,7 +1809,7 @@
                     const d = this.inventoryPrintModal.data;
                     if (!d || typeof XLSX === 'undefined') return;
                     const wb = XLSX.utils.book_new();
-                    const rows = [["VERBALE INVENTARIO - " + d.boatName + " (" + d.date + ")"], [], ["Voce", "Iniziale", "Carichi", "Teorica", "Fisica", "Venduti", "Pend/Buoni", "Prezzo Pub.", "Incasso Atteso"]];
+                    const rows = [["VERBALE INVENTARIO - " + d.boatName + " (" + d.date + ")"], [], ["Voce", "Iniziale", "Carichi", "Teorica", "Fisica", "Venduti", "Buoni/Pen", "Prezzo Pub.", "Incasso Atteso"]];
                     d.items.forEach(i => rows.push([i.productName, i.initialQty, i.addedQty, i.theoreticalQty, i.physicalQty, i.soldQty, i.pendolariQty, i.sellPrice, i.expectedRevenue]));
                     const ws = XLSX.utils.aoa_to_sheet(rows);
                     XLSX.utils.book_append_sheet(wb, ws, "Inventario");
@@ -1702,7 +1849,7 @@
                             if (d.products) {
                                 this.products = d.products; this.boats = d.boats || this.boats;
                                 this.warehouseLoads = d.warehouseLoads || []; this.transfers = d.transfers || [];
-                                this.boatTransfers = d.boatTransters || []; this.pendolariSheets = d.pendolariSheets || [];
+                                this.boatTransfers = d.boatTransfers || d.boatTransters || []; this.pendolariSheets = d.pendolariSheets || [];
                                 this.inventoryLogs = d.inventoryLogs || [];
                                 this.saveToLocalStorage();
                                 this.showNotify('Ripristinato', 'Backup caricato con successo.');
