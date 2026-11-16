@@ -1178,4 +1178,874 @@
                     return this.productGroups.find(g => g.groupId === productId || g.memberIds.includes(productId)) || null;
                 },
                 getNormalizedGroupId(productId) {
-                    const grp = this.getGroupInfoFor
+                    const grp = this.getGroupInfoForProduct(productId);
+                    return grp ? grp.groupId : productId;
+                },
+                getGroupedSelectableProducts() {
+                    const result = [];
+                    const addedGroups = new Set();
+                    this.products.forEach(p => {
+                        const grp = this.getGroupInfoForProduct(p.id);
+                        if (grp) {
+                            if (!addedGroups.has(grp.groupId)) {
+                                addedGroups.add(grp.groupId);
+                                result.push({ id: grp.groupId, name: grp.name, pendolariPrice: grp.pendolariPrice, sellPrice: grp.sellPrice });
+                            }
+                        } else {
+                            result.push(p);
+                        }
+                    });
+                    return result;
+                },
+
+                initData() {
+                    if (localStorage.getItem('gest_products')) this.products = JSON.parse(localStorage.getItem('gest_products'));
+                    if (localStorage.getItem('gest_loads')) this.warehouseLoads = JSON.parse(localStorage.getItem('gest_loads'));
+                    if (localStorage.getItem('gest_boats')) this.boats = JSON.parse(localStorage.getItem('gest_boats'));
+                    if (localStorage.getItem('gest_transfers')) this.transfers = JSON.parse(localStorage.getItem('gest_transfers'));
+                    if (localStorage.getItem('gest_boat_transfers')) this.boatTransfers = JSON.parse(localStorage.getItem('gest_boat_transfers'));
+                    if (localStorage.getItem('gest_pendolari')) this.pendolariSheets = JSON.parse(localStorage.getItem('gest_pendolari'));
+                    if (localStorage.getItem('gest_inventories')) this.inventoryLogs = JSON.parse(localStorage.getItem('gest_inventories'));
+                    if (localStorage.getItem('gest_pending_subs')) this.pendingBoatSubmissions = JSON.parse(localStorage.getItem('gest_pending_subs'));
+                    if (localStorage.getItem('gest_office_pass')) this.officePassword = localStorage.getItem('gest_office_pass');
+                    if (localStorage.getItem('gest_dark_mode') !== null) this.isDarkMode = JSON.parse(localStorage.getItem('gest_dark_mode'));
+
+                    if (this.products.length === 0) {
+                        this.products = [
+                            { id: 'p_acq_nat', name: 'Acqua Naturale 💧', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
+                            { id: 'p_acq_fri', name: 'Acqua Frizzante 🫧', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
+                            { id: 'p_ltn_1', name: 'Coca Cola 🥤', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
+                            { id: 'p_ltn_2', name: 'Fanta 🥤', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
+                            { id: 'p_red_1', name: 'Red Bull ⚡', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
+                            { id: 'p_vin_1', name: 'Prosecco 🍷', costPrice: 2.0, pendolariPrice: 3.0, sellPrice: 6.0 }
+                        ];
+                    }
+
+                    if (this.boats.length === 0) {
+                        const initialBoatNames = ["TREMITI JET", "GIUNONE JET", "VESUVIO JET", "NAPOLI JET", "SALERNO JET", "AMALFI JET", "SUPER JET", "CAPRI JET", "ISCHIA JET", "SORRENTO JET"];
+                        this.boats = initialBoatNames.map((name, idx) => ({ id: 'b_' + (idx + 1), name }));
+                    }
+
+                    // Parsing URL query parameters for WhatsApp link import (?d=...)
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const encodedData = urlParams.get('d');
+                    if (encodedData) {
+                        try {
+                            const decodedStr = decodeURIComponent(escape(atob(encodedData)));
+                            const parts = decodedStr.split('|');
+                            if (parts.length >= 3) {
+                                const boatId = parts[0];
+                                const date = parts[1];
+                                const itemsStr = parts[2];
+                                const items = itemsStr.split(';');
+                                const parsedItems = [];
+                                items.forEach(it => {
+                                    const subparts = it.split(':');
+                                    if (subparts.length === 2) {
+                                        const pId = subparts[0];
+                                        const qty = Number(subparts[1]);
+                                        parsedItems.push({
+                                            productId: pId,
+                                            productName: this.getProductName(pId),
+                                            physicalQty: qty
+                                        });
+                                    }
+                                });
+
+                                if (parsedItems.length > 0) {
+                                    const sub = {
+                                        id: 'sub_' + Date.now(),
+                                        boatId: boatId,
+                                        date: date,
+                                        items: parsedItems
+                                    };
+                                    // Check if not already exists
+                                    if (!this.pendingBoatSubmissions.some(s => s.boatId === boatId && s.date === date)) {
+                                        this.pendingBoatSubmissions.push(sub);
+                                        this.saveToLocalStorage();
+                                    }
+                                    this.incomingLinkBoatName = this.getBoatName(boatId);
+                                    window.history.replaceState({}, document.title, window.location.pathname);
+                                    this.showNotify('Link WhatsApp Ricevuto!', 'Rimanenze di ' + this.incomingLinkBoatName + ' importate con successo!', 'alert');
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Errore decodifica link d=', err);
+                        }
+                    }
+                },
+
+                saveToLocalStorage() {
+                    localStorage.setItem('gest_products', JSON.stringify(this.products));
+                    localStorage.setItem('gest_loads', JSON.stringify(this.warehouseLoads));
+                    localStorage.setItem('gest_boats', JSON.stringify(this.boats));
+                    localStorage.setItem('gest_transfers', JSON.stringify(this.transfers));
+                    localStorage.setItem('gest_boat_transfers', JSON.stringify(this.boatTransfers));
+                    localStorage.setItem('gest_pendolari', JSON.stringify(this.pendolariSheets));
+                    localStorage.setItem('gest_inventories', JSON.stringify(this.inventoryLogs));
+                    localStorage.setItem('gest_pending_subs', JSON.stringify(this.pendingBoatSubmissions));
+                    localStorage.setItem('gest_dark_mode', JSON.stringify(this.isDarkMode));
+                },
+
+                switchMode(mode) {
+                    if (mode === 'ufficio') {
+                        this.passwordModalOpen = true;
+                    } else {
+                        this.appMode = mode;
+                    }
+                },
+
+                openPasswordModal() {
+                    this.passwordModalOpen = true;
+                },
+
+                verifyOfficePassword() {
+                    if (this.enteredPassword === this.officePassword) {
+                        this.passwordModalOpen = false;
+                        this.enteredPassword = '';
+                        this.appMode = 'ufficio';
+                        this.incomingLinkBoatName = '';
+                        this.showNotify('Benvenuto', 'Accesso autorizzato all\'Ufficio Centrale.');
+                    } else {
+                        this.showNotify('Errore', 'Password non valida. Riprova.', 'error');
+                        this.enteredPassword = '';
+                    }
+                },
+
+                openSettingsModal() {
+                    this.newPasswordInput = '';
+                    this.confirmPasswordInput = '';
+                    this.settingsModalOpen = true;
+                },
+
+                saveNewOfficePassword() {
+                    if (this.newPasswordInput !== this.confirmPasswordInput) {
+                        this.showNotify('Errore', 'Le password non coincidono.', 'error');
+                        return;
+                    }
+                    if (this.newPasswordInput.trim().length === 0) {
+                        this.showNotify('Errore', 'Inserisci una password valida.', 'error');
+                        return;
+                    }
+                    this.officePassword = this.newPasswordInput.trim();
+                    localStorage.setItem('gest_office_pass', this.officePassword);
+                    this.settingsModalOpen = false;
+                    this.showNotify('Salvato', 'Password ufficio aggiornata con successo.');
+                },
+
+                toggleTheme() {
+                    this.isDarkMode = !this.isDarkMode;
+                    this.saveToLocalStorage();
+                },
+
+                showNotify(title, message, type = 'success') {
+                    this.notification = { show: true, title, message, type };
+                    setTimeout(() => { this.notification.show = false; }, 4000);
+                },
+
+                formatCurrency(val) {
+                    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val || 0);
+                },
+
+                getProductName(id) {
+                    const grp = this.productGroups.find(g => g.groupId === id);
+                    if (grp) return grp.name;
+                    const p = this.products.find(item => item.id === id);
+                    return p ? p.name : 'Articolo';
+                },
+
+                getBoatName(id) {
+                    const b = this.boats.find(item => item.id === id);
+                    return b ? b.name : 'Imbarcazione';
+                },
+
+                loadCrewInventory() {
+                    const selectable = this.getGroupedSelectableProducts();
+                    this.crewInventoryRows = selectable.map(p => ({
+                        productId: p.id,
+                        productName: p.name,
+                        physicalQty: 0
+                    }));
+                },
+
+                getWhatsAppShareUrl() {
+                    if (!this.selectedBoatForCrew) return '#';
+                    // compact string format: boatId|date|p1:q1;p2:q2;...
+                    let compactItems = [];
+                    this.crewInventoryRows.forEach(r => {
+                        const q = Number(r.physicalQty || 0);
+                        if (q > 0) {
+                            compactItems.push(`${r.productId}:${q}`);
+                        }
+                    });
+                    const rawStr = `${this.selectedBoatForCrew}|${this.crewInventoryDate}|${compactItems.join(';')}`;
+                    const encoded = btoa(unescape(encodeURIComponent(rawStr)));
+                    
+                    const currentUrl = window.location.href.split('?')[0];
+                    const shareLink = `${currentUrl}?d=${encoded}`;
+                    
+                    const boatName = this.getBoatName(this.selectedBoatForCrew);
+                    const text = `📊 *RIMANENZE FISICHE BARCA: ${boatName}* (${this.crewInventoryDate})\n\nClicca sul link sottostante per importare i dati automaticamente nel gestionale dell'ufficio:\n${shareLink}`;
+                    
+                    return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+                },
+
+                onWhatsAppAnchorClick(e) {
+                    if (!this.selectedBoatForCrew) {
+                        e.preventDefault();
+                        this.showNotify('Attenzione', 'Seleziona prima un\'imbarcazione.', 'alert');
+                    }
+                },
+
+                copyDirectShareLink() {
+                    if (!this.selectedBoatForCrew) {
+                        this.showNotify('Attenzione', 'Seleziona prima un\'imbarcazione.', 'alert');
+                        return;
+                    }
+                    let compactItems = [];
+                    this.crewInventoryRows.forEach(r => {
+                        const q = Number(r.physicalQty || 0);
+                        if (q > 0) {
+                            compactItems.push(`${r.productId}:${q}`);
+                        }
+                    });
+                    const rawStr = `${this.selectedBoatForCrew}|${this.crewInventoryDate}|${compactItems.join(';')}`;
+                    const encoded = btoa(unescape(encodeURIComponent(rawStr)));
+                    const currentUrl = window.location.href.split('?')[0];
+                    const shareLink = `${currentUrl}?d=${encoded}`;
+
+                    navigator.clipboard.writeText(shareLink).then(() => {
+                        this.showNotify('Link Copiato!', 'Il link è stato copiato negli appunti. Incollalo su WhatsApp.');
+                    }).catch(() => {
+                        this.showNotify('Errore', 'Impossibile copiare negli appunti.', 'error');
+                    });
+                },
+
+                deletePendingSubmission(subId) {
+                    this.pendingBoatSubmissions = this.pendingBoatSubmissions.filter(s => s.id !== subId);
+                    this.saveToLocalStorage();
+                    this.showNotify('Eliminato', 'Segnalazione scartata.');
+                },
+
+                openReconciliationModal(sub) {
+                    this.reconciliationModal.submission = sub;
+                    const boatId = sub.boatId;
+                    const boatInvs = this.inventoryLogs.filter(i => i.boatId === boatId);
+                    const lastInv = boatInvs.length > 0 ? boatInvs[boatInvs.length - 1] : null;
+                    const lastTs = lastInv ? (lastInv.timestamp || 0) : 0;
+
+                    let initMap = {}, addMap = {}, movMap = {}, pendMap = {};
+                    if (lastInv && lastInv.items) {
+                        lastInv.items.forEach(i => initMap[this.getNormalizedGroupId(i.productId)] = Number(i.physicalQty || 0));
+                    }
+                    this.transfers.filter(t => t.boatId === boatId && (t.timestamp || 0) > lastTs).forEach(t => {
+                        t.items.forEach(i => {
+                            const nid = this.getNormalizedGroupId(i.productId);
+                            addMap[nid] = (addMap[nid] || 0) + Number(i.quantity || 0);
+                        });
+                    });
+                    this.boatTransfers.filter(bt => bt.toBoatId === boatId && (bt.timestamp || 0) > lastTs).forEach(bt => {
+                        bt.items.forEach(i => {
+                            const nid = this.getNormalizedGroupId(i.productId);
+                            movMap[nid] = (movMap[nid] || 0) + Number(i.quantity || 0);
+                        });
+                    });
+                    this.pendolariSheets.filter(ps => ps.boatId === boatId && (ps.timestamp || 0) > lastTs).forEach(ps => {
+                        ps.items.forEach(i => {
+                            const nid = this.getNormalizedGroupId(i.productId);
+                            pendMap[nid] = (pendMap[nid] || 0) + Number(i.quantity || 0);
+                        });
+                    });
+
+                    this.reconciliationRows = sub.items.map(item => {
+                        const id = item.productId;
+                        const initialQty = initMap[id] || 0;
+                        const addedQty = addMap[id] || 0;
+                        const movedQty = movMap[id] || 0;
+                        const pendolariQty = pendMap[id] || 0;
+                        const theoreticalQty = Math.max(0, initialQty + addedQty + movedQty);
+                        const physicalQty = Number(item.physicalQty || 0);
+                        const soldQty = Math.max(0, theoreticalQty - physicalQty);
+                        
+                        const pObj = this.products.find(x => x.id === id) || this.getGroupedSelectableProducts().find(x => x.id === id);
+                        const sellPrice = pObj ? (pObj.sellPrice || 0) : 0;
+                        const expectedRevenue = soldQty * sellPrice;
+
+                        return {
+                            productId: id,
+                            productName: item.productName,
+                            initialQty,
+                            addedQty,
+                            movedQty,
+                            theoreticalQty,
+                            physicalQty,
+                            soldQty,
+                            pendolariQty,
+                            sellPrice,
+                            expectedRevenue
+                        };
+                    });
+
+                    this.reconciliationExpectedTotal = this.reconciliationRows.reduce((sum, r) => sum + r.expectedRevenue, 0);
+                    this.reconciliationActualRevenue = this.reconciliationExpectedTotal;
+                    this.reconciliationDiff = 0;
+                    this.reconciliationModal.open = true;
+                },
+
+                updateReconciliationDiff() {
+                    this.reconciliationDiff = Number(this.reconciliationActualRevenue || 0) - this.reconciliationExpectedTotal;
+                },
+
+                finalizeReconciliation() {
+                    const sub = this.reconciliationModal.submission;
+                    const ts = Date.now();
+                    const newInv = {
+                        id: 'inv_' + ts,
+                        timestamp: ts,
+                        boatId: sub.boatId,
+                        date: sub.date,
+                        items: JSON.parse(JSON.stringify(this.reconciliationRows)),
+                        expectedRevenue: this.reconciliationExpectedTotal,
+                        actualRevenue: Number(this.reconciliationActualRevenue || 0),
+                        cashDiff: this.reconciliationDiff
+                    };
+                    this.inventoryLogs.push(newInv);
+                    this.pendingBoatSubmissions = this.pendingBoatSubmissions.filter(s => s.id !== sub.id);
+                    this.saveToLocalStorage();
+                    this.reconciliationModal.open = false;
+                    this.openSavedInventoryPrint(newInv);
+                    this.showNotify('Verbale Registrato', 'La cassa è stata chiusa con successo.');
+                },
+
+                openBoatHub(boatId, tab = 'scarico') {
+                    this.boatHub.boatId = boatId;
+                    this.boatHub.tab = tab;
+                    this.boatHub.open = true;
+                },
+
+                getWarehouseProductQty(productId) {
+                    const normId = this.getNormalizedGroupId(productId);
+                    let loaded = 0, transferred = 0;
+                    this.warehouseLoads.forEach(l => {
+                        (l.items || [l]).forEach(i => {
+                            if (this.getNormalizedGroupId(i.productId) === normId) {
+                                loaded += Number(i.quantity || 0);
+                            }
+                        });
+                    });
+                    this.transfers.forEach(t => {
+                        t.items.forEach(i => {
+                            if (this.getNormalizedGroupId(i.productId) === normId) {
+                                transferred += Number(i.quantity || 0);
+                            }
+                        });
+                    });
+                    return Math.max(0, loaded - transferred);
+                },
+
+                getWarehouseStockSummary() {
+                    return this.getGroupedSelectableProducts().map(p => {
+                        const qty = this.getWarehouseProductQty(p.id);
+                        return { productId: p.id, name: p.name, qty, totalCost: qty * (p.costPrice || 0) };
+                    });
+                },
+
+                getTotalWarehouseCostValue() {
+                    return this.getWarehouseStockSummary().reduce((sum, i) => sum + i.totalCost, 0);
+                },
+
+                getProductTotalLoaded(productId) {
+                    const normId = this.getNormalizedGroupId(productId);
+                    let total = 0;
+                    this.warehouseLoads.forEach(l => {
+                        (l.items || [l]).forEach(i => {
+                            if (this.getNormalizedGroupId(i.productId) === normId) {
+                                total += Number(i.quantity || 0);
+                            }
+                        });
+                    });
+                    return total;
+                },
+
+                getProductTotalTransferred(productId) {
+                    const normId = this.getNormalizedGroupId(productId);
+                    let total = 0;
+                    this.transfers.forEach(t => {
+                        t.items.forEach(i => {
+                            if (this.getNormalizedGroupId(i.productId) === normId) {
+                                total += Number(i.quantity || 0);
+                            }
+                        });
+                    });
+                    return total;
+                },
+
+                getBoatTotalItemsCount(boatId) {
+                    const boatInvs = this.inventoryLogs.filter(i => i.boatId === boatId);
+                    if (boatInvs.length === 0) return 0;
+                    const lastInv = boatInvs[boatInvs.length - 1];
+                    return lastInv.items.reduce((sum, i) => sum + Number(i.physicalQty || 0), 0);
+                },
+
+                getLastInventoryDate(boatId) {
+                    const boatInvs = this.inventoryLogs.filter(i => i.boatId === boatId);
+                    if (boatInvs.length === 0) return 'Mai';
+                    return boatInvs[boatInvs.length - 1].date;
+                },
+
+                openProductModal() {
+                    this.productModal.isEdit = false;
+                    this.productModal.form = { id: 'p_' + Date.now(), name: '', costPrice: 0, pendolariPrice: 0, sellPrice: 0 };
+                    this.productModal.open = true;
+                },
+
+                editProduct(p) {
+                    this.productModal.isEdit = true;
+                    this.productModal.form = { ...p };
+                    this.productModal.open = true;
+                },
+
+                saveProduct() {
+                    if (this.productModal.isEdit) {
+                        const idx = this.products.findIndex(p => p.id === this.productModal.form.id);
+                        if (idx !== -1) this.products[idx] = { ...this.productModal.form };
+                    } else {
+                        this.products.push({ ...this.productModal.form });
+                    }
+                    this.productModal.open = false;
+                    this.saveToLocalStorage();
+                    this.showNotify('Salvato', 'Listino aggiornato con successo.');
+                },
+
+                deleteProduct(id) {
+                    this.products = this.products.filter(p => p.id !== id);
+                    this.saveToLocalStorage();
+                },
+
+                openBoatModal() {
+                    this.boatModal.isEdit = false;
+                    this.boatModal.form = { id: 'boat_' + Date.now(), name: '' };
+                    this.boatModal.open = true;
+                },
+
+                editBoat(b) {
+                    this.boatModal.isEdit = true;
+                    this.boatModal.form = { ...b };
+                    this.boatModal.open = true;
+                },
+
+                saveBoat() {
+                    if (this.boatModal.isEdit) {
+                        const idx = this.boats.findIndex(b => b.id === this.boatModal.form.id);
+                        if (idx !== -1) this.boats[idx] = { ...this.boatModal.form };
+                    } else {
+                        this.boats.push({ ...this.boatModal.form });
+                    }
+                    this.boatModal.open = false;
+                    this.saveToLocalStorage();
+                    this.showNotify('Salvato', 'Imbarcazione aggiornata.');
+                },
+
+                deleteBoat(id) {
+                    this.boats = this.boats.filter(b => b.id !== id);
+                    this.saveToLocalStorage();
+                },
+
+                addWarehouseLoad() {
+                    if (!this.loadForm.docNumber || this.loadForm.items.length === 0) {
+                        this.showNotify('Attenzione', 'Inserisci numero DDT e almeno un articolo.', 'alert');
+                        return;
+                    }
+                    this.warehouseLoads.push({ id: 'load_' + Date.now(), timestamp: Date.now(), ...this.loadForm, items: [...this.loadForm.items] });
+                    this.saveToLocalStorage();
+                    this.loadForm.docNumber = '';
+                    this.loadForm.items = [];
+                    this.showNotify('Caricato', 'DDT registrato in magazzino.');
+                },
+
+                addLoadItem() {
+                    if (!this.currentLoadItem.productId || !this.currentLoadItem.quantity) return;
+                    this.loadForm.items.push({ ...this.currentLoadItem });
+                    this.currentLoadItem = { productId: '', quantity: '', costPrice: '' };
+                },
+
+                onSelectSingleLoadProduct() {
+                    const p = this.products.find(x => x.id === this.currentLoadItem.productId);
+                    if (p) this.currentLoadItem.costPrice = p.costPrice;
+                },
+
+                removeLoadItem(idx) {
+                    this.loadForm.items.splice(idx, 1);
+                },
+
+                addAllMultiLoadItems() {
+                    this.products.forEach(p => {
+                        const q = Number(this.multiLoadQuantities[p.id] || 0);
+                        if (q > 0) {
+                            this.loadForm.items.push({ productId: p.id, quantity: q, costPrice: p.costPrice });
+                            this.multiLoadQuantities[p.id] = '';
+                        }
+                    });
+                    this.showNotify('Inseriti', 'Articoli aggiunti al DDT.');
+                },
+
+                createTransferFromHub() {
+                    if (!this.transferForm.bollaNumber || this.transferForm.items.length === 0) {
+                        this.showNotify('Attenzione', 'Inserisci numero bolla e articoli.', 'alert');
+                        return;
+                    }
+                    this.transfers.push({ id: 't_' + Date.now(), timestamp: Date.now(), boatId: this.boatHub.boatId, ...this.transferForm, items: [...this.transferForm.items] });
+                    this.saveToLocalStorage();
+                    this.transferForm.bollaNumber = '';
+                    this.transferForm.items = [];
+                    this.boatHub.open = false;
+                    this.showNotify('Caricata', 'Bolla registrata sulla barca.');
+                },
+
+                addAllMultiTransferItems() {
+                    this.products.forEach(p => {
+                        const q = Number(this.multiTransferQuantities[p.id] || 0);
+                        if (q > 0) {
+                            this.transferForm.items.push({ productId: p.id, quantity: q });
+                            this.multiTransferQuantities[p.id] = '';
+                        }
+                    });
+                },
+
+                onSheetTypeChange() {
+                    if (this.pendolariForm.sheetType === 'comando') {
+                        this.currentPendolariItem.customPrice = 0;
+                    } else {
+                        this.onPendolariProductSelect();
+                    }
+                },
+
+                onPendolariProductSelect() {
+                    if (this.pendolariForm.sheetType === 'comando') {
+                        this.currentPendolariItem.customPrice = 0;
+                        return;
+                    }
+                    const grp = this.getGroupInfoForProduct(this.currentPendolariItem.productId);
+                    if (grp) {
+                        this.currentPendolariItem.customPrice = this.pendolariForm.sheetType === 'equipaggio' ? (grp.pendolariPrice * 0.5) : grp.pendolariPrice;
+                    } else {
+                        const p = this.products.find(x => x.id === this.currentPendolariItem.productId);
+                        this.currentPendolariItem.customPrice = p ? (this.pendolariForm.sheetType === 'equipaggio' ? (p.pendolariPrice * 0.5) : p.pendolariPrice) : 0;
+                    }
+                },
+
+                addPendolariItem() {
+                    if (!this.currentPendolariItem.productId) return;
+                    const price = this.pendolariForm.sheetType === 'comando' ? 0 : Number(this.currentPendolariItem.customPrice || 0);
+                    this.pendolariForm.items.push({ productId: this.currentPendolariItem.productId, quantity: Number(this.currentPendolariItem.quantity || 1), customPrice: price });
+                    this.currentPendolariItem = { productId: '', quantity: 1, customPrice: 0 };
+                },
+
+                savePendolariSheetFromHub() {
+                    if (this.pendolariForm.items.length === 0) return;
+                    this.pendolariSheets.push({ id: 'ps_' + Date.now(), timestamp: Date.now(), boatId: this.boatHub.boatId, ...this.pendolariForm, items: [...this.pendolariForm.items] });
+                    this.saveToLocalStorage();
+                    this.pendolariForm.notes = '';
+                    this.pendolariForm.items = [];
+                    this.boatHub.open = false;
+                    this.showNotify('Registrato', 'Documento/Buono salvato.');
+                },
+
+                createBoatTransferFromHub() {
+                    if (!this.boatTransferForm.bollaNumber || !this.boatTransferForm.toBoatId || this.boatTransferForm.items.length === 0) {
+                        this.showNotify('Attenzione', 'Compila tutti i campi dello spostamento.', 'alert');
+                        return;
+                    }
+                    this.boatTransfers.push({ id: 'bt_' + Date.now(), timestamp: Date.now(), fromBoatId: this.boatHub.boatId, ...this.boatTransferForm, items: [...this.boatTransferForm.items] });
+                    this.saveToLocalStorage();
+                    this.boatTransferForm.bollaNumber = '';
+                    this.boatTransferForm.toBoatId = '';
+                    this.boatTransferForm.items = [];
+                    this.boatHub.open = false;
+                    this.showNotify('Trasferito', 'Spostamento completato.');
+                },
+
+                addAllMultiBoatTransferItems() {
+                    this.getGroupedSelectableProducts().forEach(p => {
+                        const q = Number(this.multiBoatTransferQuantities[p.id] || 0);
+                        if (q > 0) {
+                            this.boatTransferForm.items.push({ productId: p.id, quantity: q });
+                            this.multiBoatTransferQuantities[p.id] = '';
+                        }
+                    });
+                },
+
+                openSavedInventoryPrint(inv) {
+                    this.inventoryPrintModal.data = {
+                        boatName: this.getBoatName(inv.boatId),
+                        date: inv.date,
+                        expectedRevenue: inv.expectedRevenue,
+                        actualRevenue: inv.actualRevenue,
+                        cashDiff: inv.cashDiff,
+                        items: inv.items.map(i => ({ ...i, productName: i.productName || this.getProductName(i.productId) }))
+                    };
+                    this.inventoryPrintModal.open = true;
+                },
+
+                deleteInventoryLog(id) {
+                    this.inventoryLogs = this.inventoryLogs.filter(i => i.id !== id);
+                    this.saveToLocalStorage();
+                },
+
+                printDocLoad(l) {
+                    this.printModal.title = 'DOCUMENTO DI TRASPORTO (Magazzino)';
+                    this.printModal.docNumber = l.docNumber;
+                    this.printModal.date = l.date;
+                    this.printModal.destination = 'MAGAZZINO CENTRALE A&G COFFEE';
+                    this.printModal.destinationCity = 'POZZUOLI / TORRE DEL GRECO';
+                    this.printModal.items = l.items || [l];
+                    this.printModal.open = true;
+                },
+
+                printTransfer(t) {
+                    this.printModal.title = 'BOLLA DI CARICO IMBARECAZIONE';
+                    this.printModal.docNumber = t.bollaNumber;
+                    this.printModal.date = t.date;
+                    this.printModal.destination = this.getBoatName(t.boatId);
+                    this.printModal.destinationCity = 'PORTO / FLOTTA';
+                    this.printModal.items = t.items;
+                    this.printModal.open = true;
+                },
+
+                printBoatTransferDoc(bt) {
+                    this.printModal.title = 'SPOSTAMENTO TRA IMEBARCAZIONI';
+                    this.printModal.docNumber = bt.bollaNumber;
+                    this.printModal.date = bt.date;
+                    this.printModal.destination = this.getBoatName(bt.toBoatId);
+                    this.printModal.destinationCity = 'DA: ' + this.getBoatName(bt.fromBoatId);
+                    this.printModal.items = bt.items;
+                    this.printModal.open = true;
+                },
+
+                triggerPrint() {
+                    window.print();
+                },
+
+                deleteTransfer(id) {
+                    this.transfers = this.transfers.filter(x => x.id !== id);
+                    this.saveToLocalStorage();
+                },
+
+                deleteWarehouseLoad(id) {
+                    this.warehouseLoads = this.warehouseLoads.filter(x => x.id !== id);
+                    this.saveToLocalStorage();
+                },
+
+                deleteBoatTransfer(id) {
+                    this.boatTransfers = this.boatTransfers.filter(x => x.id !== id);
+                    this.saveToLocalStorage();
+                },
+
+                getProductTotalTransferred(productId) {
+                    const normId = this.getNormalizedGroupId(productId);
+                    let total = 0;
+                    this.transfers.forEach(t => {
+                        t.items.forEach(i => {
+                            if (this.getNormalizedGroupId(i.productId) === normId) {
+                                total += Number(i.quantity || 0);
+                            }
+                        });
+                    });
+                    return total;
+                },
+
+                getProductTimeline(productId) {
+                    const normId = this.getNormalizedGroupId(productId);
+                    let timeline = [];
+                    this.warehouseLoads.forEach(l => {
+                        (l.items || [l]).forEach(i => {
+                            if (this.getNormalizedGroupId(i.productId) === normId) {
+                                timeline.push({
+                                    id: l.id + '_' + i.productId,
+                                    timestamp: l.timestamp || 0,
+                                    date: l.date,
+                                    type: 'Carico DDT',
+                                    detail: 'Doc N° ' + l.docNumber,
+                                    qtyLabel: '+' + i.quantity + ' Pz',
+                                    color: 'text-blue-400'
+                                });
+                            }
+                        });
+                    });
+                    this.transfers.forEach(t => {
+                        t.items.forEach(i => {
+                            if (this.getNormalizedGroupId(i.productId) === normId) {
+                                timeline.push({
+                                    id: t.id + '_' + i.productId,
+                                    timestamp: t.timestamp || 0,
+                                    date: t.date,
+                                    type: 'Scarico Barca',
+                                    detail: 'Bolla ' + t.bollaNumber + ' su ' + this.getBoatName(t.boatId),
+                                    qtyLabel: '-' + i.quantity + ' Pz',
+                                    color: 'text-purple-400'
+                                });
+                            }
+                        });
+                    });
+                    this.pendolariSheets.forEach(ps => {
+                        ps.items.forEach(i => {
+                            if (this.getNormalizedGroupId(i.productId) === normId) {
+                                timeline.push({
+                                    id: ps.id + '_' + i.productId,
+                                    timestamp: ps.timestamp || 0,
+                                    date: ps.date,
+                                    type: 'Buono/Pass',
+                                    detail: ps.sheetType + ' su ' + this.getBoatName(ps.boatId),
+                                    qtyLabel: '-' + i.quantity + ' Pz',
+                                    color: 'text-sky-400'
+                                });
+                            }
+                        });
+                    });
+                    return timeline.sort((a, b) => b.timestamp - a.timestamp);
+                },
+
+                exportAllInventoriesExcel() {
+                    let rows = [];
+                    this.inventoryLogs.forEach(inv => {
+                        inv.items.forEach(item => {
+                            rows.push({
+                                "Data Verbale": inv.date,
+                                "Imbarcazione": this.getBoatName(inv.boatId),
+                                "Articolo": item.productName,
+                                "Giacenza Teorica": item.theoreticalQty,
+                                "Giacenza Fisica": item.physicalQty,
+                                "Venduti": item.soldQty,
+                                "Prezzo Pubblico": item.sellPrice,
+                                "Incasso Atteso": item.expectedRevenue
+                            });
+                        });
+                    });
+                    const ws = XLSX.utils.json_to_sheet(rows);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Verbali Cassa");
+                    XLSX.writeFile(wb, "Storico_Verbali_AG_Coffee.xlsx");
+                },
+
+                exportSingleInventoryExcel(inv) {
+                    let rows = inv.items.map(item => ({
+                        "Imbarcazione": this.getBoatName(inv.boatId),
+                        "Data": inv.date,
+                        "Articolo": item.productName,
+                        "Iniziale": item.initialQty,
+                        "Carichi": item.addedQty,
+                        "Spostamenti": item.movedQty,
+                        "Teorica": item.theoreticalQty,
+                        "Fisica": item.physicalQty,
+                        "Venduti": item.soldQty,
+                        "Prezzo": item.sellPrice,
+                        "Incasso Atteso": item.expectedRevenue
+                    }));
+                    const ws = XLSX.utils.json_to_sheet(rows);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Verbale Barca");
+                    XLSX.writeFile(wb, `Verbale_${this.getBoatName(inv.boatId)}_${inv.date}.xlsx`);
+                },
+
+                exportBackup() {
+                    const data = {
+                        products: this.products,
+                        warehouseLoads: this.warehouseLoads,
+                        boats: this.boats,
+                        transfers: this.transfers,
+                        boatTransfers: this.boatTransfers,
+                        pendolariSheets: this.pendolariSheets,
+                        inventoryLogs: this.inventoryLogs,
+                        officePassword: this.officePassword
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `backup_ag_coffee_${new Date().toISOString().slice(0,10)}.json`;
+                    a.click();
+                },
+
+                importBackup(e) {
+                    const f = e.target.files[0];
+                    if (!f) return;
+                    const r = new FileReader();
+                    r.onload = (ev) => {
+                        try {
+                            const d = JSON.parse(ev.target.result);
+                            if (d.products) {
+                                this.products = d.products;
+                                this.boats = d.boats || this.boats;
+                                this.warehouseLoads = d.warehouseLoads || [];
+                                this.transfers = d.transfers || [];
+                                this.boatTransfers = d.boatTransfers || [];
+                                this.pendolariSheets = d.pendolariSheets || [];
+                                this.inventoryLogs = d.inventoryLogs || [];
+                                if (d.officePassword) this.officePassword = d.officePassword;
+                                this.saveToLocalStorage();
+                                this.showNotify('Ripristinato', 'Backup caricato correttamente.');
+                            }
+                        } catch (err) {
+                            this.showNotify('Errore', 'File di backup non valido.', 'error');
+                        }
+                    };
+                    r.readAsText(f);
+                },
+
+                handleEscapeKey() {
+                    this.passwordModalOpen = false;
+                    this.settingsModalOpen = false;
+                    this.productModal.open = false;
+                    this.boatModal.open = false;
+                    this.boatHub.open = false;
+                    this.reconciliationModal.open = false;
+                    this.printModal.open = false;
+                    this.inventoryPrintModal.open = false;
+                },
+
+                get filteredProducts() {
+                    if (!this.searchFilter.products) return this.products;
+                    const q = this.searchFilter.products.toLowerCase();
+                    return this.products.filter(p => p.name.toLowerCase().includes(q));
+                },
+
+                get filteredCrewInventoryRows() {
+                    if (!this.searchFilter.crewProducts) return this.crewInventoryRows;
+                    const q = this.searchFilter.crewProducts.toLowerCase();
+                    return this.crewInventoryRows.filter(r => r.productName.toLowerCase().includes(q));
+                },
+
+                get filteredMultiLoadProducts() {
+                    if (!this.searchFilter.multiLoad) return this.products;
+                    const q = this.searchFilter.multiLoad.toLowerCase();
+                    return this.products.filter(p => p.name.toLowerCase().includes(q));
+                },
+
+                get filteredMultiTransferProducts() {
+                    if (!this.searchFilter.multiTransfer) return this.getGroupedSelectableProducts();
+                    const q = this.searchFilter.multiTransfer.toLowerCase();
+                    return this.getGroupedSelectableProducts().filter(p => p.name.toLowerCase().includes(q));
+                },
+
+                get filteredMultiBoatTransferProducts() {
+                    if (!this.searchFilter.multiBoatTransfer) return this.getGroupedSelectableProducts();
+                    const q = this.searchFilter.multiBoatTransfer.toLowerCase();
+                    return this.getGroupedSelectableProducts().filter(p => p.name.toLowerCase().includes(q));
+                },
+
+                get filteredWarehouseStock() {
+                    const summary = this.getWarehouseStockSummary();
+                    if (!this.searchFilter.warehouse) return summary;
+                    const q = this.searchFilter.warehouse.toLowerCase();
+                    return summary.filter(item => item.name.toLowerCase().includes(q));
+                },
+
+                get filteredBoats() {
+                    if (!this.searchFilter.boats) return this.boats;
+                    const q = this.searchFilter.boats.toLowerCase();
+                    return this.boats.filter(b => b.name.toLowerCase().includes(q));
+                }
+            };
+        }
+    </script>
+</body>
+                                        </html>
