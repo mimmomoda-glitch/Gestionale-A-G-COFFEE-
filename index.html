@@ -1,18 +1,17 @@
+<!-- Chosen Palette: Slate Dark & Emerald/Blue Marine Operational -->
+<!-- Application Structure Plan: Dual-mode Single Page Application (Crew Boat Terminal vs Password-Protected Office & Warehouse Dashboard) connected via stateless URL-encoded WhatsApp links (?d=boatId|date|item:qty) and localStorage persistence. -->
+<!-- Visualization & Content Choices: Structured Tailwind CSS cards, KPI summary tiles, interactive quantity steppers, dynamic reconciliation tables, and print-ready A4 DDT/Inventory reports without SVG or Mermaid dependencies. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 <!DOCTYPE html>
 <html lang="it" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gestionale Magazzino & Flotta Pro (A&G COFFEE)</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- SheetJS (Esportazione Excel reale .xlsx) -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -41,7 +40,6 @@
 </head>
 <body :class="isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900'" class="h-full flex flex-col transition-colors duration-200 overflow-x-hidden" x-data="appData()" x-init="initData()" @keydown.escape.window="handleEscapeKey()">
 
-    <!-- NOTIFICA TOAST -->
     <div x-show="notification.show" x-transition class="fixed top-4 right-4 z-[70] max-w-sm bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-3.5 flex items-center gap-3 no-print" x-cloak>
         <div :class="notification.type === 'error' ? 'bg-red-500/20 text-red-400' : (notification.type === 'alert' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400')" class="p-2.5 rounded-xl shrink-0">
             <i :class="notification.type === 'error' ? 'fa-solid fa-circle-exclamation' : (notification.type === 'alert' ? 'fa-solid fa-bell fa-shake' : 'fa-solid fa-circle-check')" class="text-base"></i>
@@ -53,7 +51,6 @@
         <button @click="notification.show = false" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
-    <!-- 0. SCHERMATA DI ACCESSO SCELTA MODALITÀ -->
     <template x-if="appMode === 'select'">
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950 overflow-y-auto">
             <div class="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
@@ -64,16 +61,27 @@
                     <h1 class="text-xl sm:text-2xl font-black text-white">A&G COFFEE SRL</h1>
                     <p class="text-xs text-slate-400 mt-1">Seleziona la postazione operativa</p>
                 </div>
+
+                <div x-show="incomingLinkBoatName" class="bg-emerald-500/15 border border-emerald-500/40 rounded-2xl p-3.5 text-left flex items-center gap-3 animate-pulse" x-cloak>
+                    <div class="bg-emerald-500 text-slate-950 w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-black">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                    </div>
+                    <div class="text-xs">
+                        <p class="font-black text-emerald-300">Rimanenze ricevute dal link WhatsApp!</p>
+                        <p class="text-slate-300 mt-0.5">Barca: <strong class="text-white" x-text="incomingLinkBoatName"></strong>. Accedi all'Ufficio per chiudere la cassa.</p>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button @click="switchMode('barca')" class="bg-gradient-to-br from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white p-5 rounded-2xl text-left shadow-lg transition flex flex-col justify-between gap-3">
                         <div class="bg-white/15 w-11 h-11 rounded-xl flex items-center justify-center"><i class="fa-solid fa-sailboat text-xl"></i></div>
                         <div>
                             <h3 class="font-black text-sm sm:text-base">1. Terminale Operatore Barca</h3>
-                            <p class="text-[11px] text-emerald-100 mt-1">Conta le rimanenze fisiche a bordo e trasmetti all'ufficio.</p>
+                            <p class="text-[11px] text-emerald-100 mt-1">Conta le rimanenze fisiche a bordo e invia su WhatsApp.</p>
                         </div>
                     </button>
                     <button @click="openPasswordModal()" class="bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white p-5 rounded-2xl text-left shadow-lg transition flex flex-col justify-between gap-3 relative">
-                        <span x-show="pendingBoatSubmissions.length > 0" class="absolute top-4 right-4 bg-red-500 text-white px-2.5 py-1 rounded-full text-xs font-black animate-bounce shadow" x-text="pendingBoatSubmissions.length + ' Nuovi'"></span>
+                        <span x-show="pendingBoatSubmissions.length > 0" class="absolute top-4 right-4 bg-red-500 text-white px-2.5 py-1 rounded-full text-xs font-black animate-bounce shadow" x-text="pendingBoatSubmissions.length + ' Nuovi'" x-cloak></span>
                         <div class="bg-white/15 w-11 h-11 rounded-xl flex items-center justify-center"><i class="fa-solid fa-lock text-xl"></i></div>
                         <div>
                             <h3 class="font-black text-sm sm:text-base">2. Postazione Ufficio & Magazzino</h3>
@@ -85,13 +93,12 @@
         </div>
     </template>
 
-    <!-- MODAL PASSWORD UFFICIO -->
     <div x-show="passwordModalOpen" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 no-print" x-cloak>
         <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-white text-center">
             <div class="bg-blue-600/20 text-blue-400 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-lg"><i class="fa-solid fa-shield-halved"></i></div>
             <div>
                 <h3 class="text-base font-black">Accesso Riservato Ufficio</h3>
-                <p class="text-xs text-slate-400 mt-1">Inserisci la password amministrativa per entrare nel magazzino e nelle impostazioni.</p>
+                <p class="text-xs text-slate-400 mt-1">Inserisci la password amministrativa per aprire l'area ufficio.</p>
             </div>
             <form @submit.prevent="verifyOfficePassword()" class="space-y-3">
                 <input type="password" x-model="enteredPassword" required autofocus class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-3.5 py-3 text-center text-sm font-black tracking-widest focus:outline-none focus:border-blue-500" placeholder="Inserisci password...">
@@ -104,7 +111,6 @@
         </div>
     </div>
 
-    <!-- MODAL CAMBIO PASSWORD -->
     <div x-show="settingsModalOpen" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 no-print" x-cloak>
         <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-white">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -128,9 +134,6 @@
         </div>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- 1. TERMINALE OPERATORE BARCA                                             -->
-    <!-- ========================================================================= -->
     <template x-if="appMode === 'barca'">
         <div class="flex-1 flex flex-col h-full bg-slate-950 text-slate-100">
             <header class="bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-40">
@@ -138,7 +141,7 @@
                     <div class="bg-emerald-600 p-2.5 rounded-xl text-white shadow"><i class="fa-solid fa-sailboat"></i></div>
                     <div>
                         <h2 class="text-sm sm:text-base font-black">Terminale Operatore Barca</h2>
-                        <p class="text-[11px] text-slate-400">Conteggio Rimanenze Fisiche & Trasmissione Ufficio</p>
+                        <p class="text-[11px] text-slate-400">Conteggio Rimanenze Fisiche & Invio Link WhatsApp</p>
                     </div>
                 </div>
                 <button @click="switchMode('select')" class="bg-slate-800 hover:bg-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300">
@@ -165,7 +168,7 @@
                                     <i class="fa-solid fa-boxes-stacked text-emerald-400"></i>
                                     <span x-text="'Rimanenze Fisiche: ' + getBoatName(selectedBoatForCrew)"></span>
                                 </h3>
-                                <p class="text-[11px] text-slate-400 mt-0.5">Inserisci le quantità fisicamente rimaste a bordo e trasmetti all'ufficio.</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Inserisci le quantità contate e premi il tasto verde per inviare il link.</p>
                             </div>
                             <div class="flex items-center gap-2 w-full sm:w-auto">
                                 <input type="text" x-model="searchFilter.crewProducts" placeholder="🔍 Filtra voce..." class="bg-slate-950 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs flex-1 sm:w-44">
@@ -173,7 +176,6 @@
                             </div>
                         </div>
 
-                        <!-- Griglia Conteggio Articoli -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             <template x-for="row in filteredCrewInventoryRows" :key="row.productId">
                                 <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center justify-between gap-3">
@@ -187,13 +189,12 @@
                             </template>
                         </div>
 
-                        <!-- Pulsanti Trasmissione (Senza link lunghi che bloccano WhatsApp) -->
-                        <div class="sticky bottom-3 bg-slate-950/90 backdrop-blur p-2.5 rounded-2xl border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-2.5 shadow-2xl">
-                            <button type="button" @click="copyCrewWhatsAppReport()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 px-4 rounded-xl text-xs font-black shadow-lg transition flex items-center justify-center gap-2">
-                                <i class="fa-brands fa-whatsapp text-base"></i> 1. Copia Riepilogo per WhatsApp
-                            </button>
-                            <button type="button" @click="downloadCrewSubmissionFile()" class="bg-blue-600 hover:bg-blue-500 text-white py-3.5 px-4 rounded-xl text-xs font-black shadow-lg transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-file-export text-sm"></i> 2. Scarica File Scheda (.json)
+                        <div class="sticky bottom-3 bg-slate-950/95 backdrop-blur p-3 rounded-2xl border border-slate-800 shadow-2xl space-y-2">
+                            <a :href="getWhatsAppShareUrl()" target="_blank" rel="noopener noreferrer" @click="onWhatsAppAnchorClick($event)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 px-5 rounded-xl text-xs sm:text-sm font-black shadow-lg transition flex items-center justify-center gap-2.5 cursor-pointer">
+                                <i class="fa-brands fa-whatsapp text-xl"></i> Genera Link e Invia su WhatsApp all'Ufficio
+                            </a>
+                            <button type="button" @click="copyDirectShareLink()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-link text-sky-400"></i> Copia Link Diretto (se invii manualmente)
                             </button>
                         </div>
                     </div>
@@ -202,12 +203,8 @@
         </div>
     </template>
 
-    <!-- ========================================================================= -->
-    <!-- 2. POSTAZIONE UFFICIO & MAGAZZINO                                         -->
-    <!-- ========================================================================= -->
     <template x-if="appMode === 'ufficio'">
         <div class="flex-1 flex flex-col h-full">
-            <!-- Header Ufficio -->
             <header :class="isDarkMode ? 'bg-slate-900/95 border-slate-800' : 'bg-white/95 border-slate-200'" class="border-b sticky top-0 z-40 no-print">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3 min-w-0">
@@ -219,14 +216,13 @@
                             <div class="flex items-center gap-2">
                                 <h1 class="text-sm sm:text-base font-black tracking-tight truncate">Ufficio & Magazzino Centrale Pro</h1>
                                 <span class="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Sync
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Link Sync Attivo
                                 </span>
                             </div>
                             <p class="text-[11px] text-slate-400 truncate">A&G COFFEE SRL • Controllo Flotta, DDT & Riscontro Cassa</p>
                         </div>
                     </div>
 
-                    <!-- Azioni Rapide Header -->
                     <div class="flex items-center gap-1.5 shrink-0">
                         <button @click="openSettingsModal()" class="bg-amber-600/20 text-amber-400 border border-amber-500/30 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5" title="Impostazioni Password">
                             <i class="fa-solid fa-key"></i><span class="hidden sm:inline">Password</span>
@@ -234,8 +230,8 @@
                         <button @click="exportBackup()" class="bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5" title="Backup Completo">
                             <i class="fa-solid fa-download"></i><span class="hidden sm:inline">Backup</span>
                         </button>
-                        <label class="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer" title="Importa File Barca o Backup">
-                            <i class="fa-solid fa-upload"></i><span class="hidden sm:inline">Importa File</span>
+                        <label class="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer" title="Ripristina Backup">
+                            <i class="fa-solid fa-upload"></i><span class="hidden sm:inline">Ripristina</span>
                             <input type="file" accept=".json" @change="importBackup($event)" class="hidden">
                         </label>
                         <button @click="toggleTheme()" :class="isDarkMode ? 'bg-slate-800 text-amber-400 border-slate-700' : 'bg-slate-200 text-slate-700 border-slate-300'" class="p-2.5 rounded-xl border text-xs font-bold">
@@ -245,10 +241,8 @@
                 </div>
             </header>
 
-            <!-- Main Content Ufficio -->
             <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 pb-12 overflow-y-auto no-print space-y-4">
 
-                <!-- Griglia Finestre Colorate Navigazione Ufficio -->
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
                     <button @click="activeTab = 'dashboard'" :class="activeTab === 'dashboard' ? 'ring-2 ring-blue-300 scale-[1.01]' : 'opacity-85 hover:opacity-100'" class="bg-gradient-to-br from-blue-600 to-indigo-700 p-3.5 rounded-2xl text-left text-white shadow-md transition flex flex-col justify-between gap-2">
                         <i class="fa-solid fa-chart-pie text-lg"></i>
@@ -259,7 +253,7 @@
                     </button>
                     <button @click="activeTab = 'rimanenze'" :class="activeTab === 'rimanenze' ? 'ring-2 ring-emerald-300 scale-[1.01]' : 'opacity-85 hover:opacity-100'" class="bg-gradient-to-br from-emerald-600 to-teal-700 p-3.5 rounded-2xl text-left text-white shadow-md transition flex flex-col justify-between gap-2 relative">
                         <i class="fa-solid fa-bell text-lg"></i>
-                        <span x-show="pendingBoatSubmissions.length > 0" class="absolute top-2.5 right-2.5 bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] font-black animate-pulse shadow" x-text="pendingBoatSubmissions.length"></span>
+                        <span x-show="pendingBoatSubmissions.length > 0" class="absolute top-2.5 right-2.5 bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] font-black animate-pulse shadow" x-text="pendingBoatSubmissions.length" x-cloak></span>
                         <div>
                             <h3 class="font-black text-xs sm:text-sm">Rimanenze</h3>
                             <p class="text-[10px] text-emerald-100">Da Barche (<span x-text="pendingBoatSubmissions.length"></span>)</p>
@@ -295,12 +289,11 @@
                     </button>
                 </div>
 
-                <!-- 1. DASHBOARD UFFICIO -->
                 <div x-show="activeTab === 'dashboard'" class="space-y-4">
                     <div :class="isDarkMode ? 'bg-gradient-to-r from-blue-900/40 via-slate-900 to-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm">
                         <div>
                             <h2 class="text-base sm:text-lg font-black">Ufficio Centrale & Magazzino Pro 🏢</h2>
-                            <p class="text-xs text-slate-400 mt-0.5">Area protetta. Gestisci i riscontri delle rimanenze trasmesse dalle barche, i carichi DDT e la flotta.</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Area protetta. Gestisci i riscontri delle rimanenze trasmesse tramite link WhatsApp, i carichi DDT e la flotta.</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <button @click="activeTab = 'rimanenze'" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shadow flex items-center gap-1.5 transition">
@@ -337,31 +330,24 @@
                                 <div :class="isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'" class="border rounded-xl p-3 flex justify-between items-center text-xs">
                                     <div>
                                         <span class="font-black text-emerald-400 block" x-text="getBoatName(sub.boatId)"></span>
-                                        <span class="text-[10px] text-slate-400" x-text="'Data: ' + sub.date + ' • ' + sub.items.length + ' voci contate'"></span>
+                                        <span class="text-[10px] text-slate-400" x-text="'Data: ' + sub.date + ' • ' + sub.items.length + ' voci'"></span>
                                     </div>
                                     <button @click="openReconciliationModal(sub)" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg font-bold text-[11px]">Verifica Cassa</button>
                                 </div>
                             </template>
                             <template x-if="pendingBoatSubmissions.length === 0">
-                                <p class="text-xs text-slate-400 py-4 text-center">Nessuna rimanenza in attesa al momento.</p>
+                                <p class="text-xs text-slate-400 py-4 text-center">Nessuna rimanenza in attesa. Clicca sui link ricevuti su WhatsApp per importarli qui in automatico.</p>
                             </template>
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. RIMANENZE DA VERIFICARE -->
                 <div x-show="activeTab === 'rimanenze'" class="space-y-4">
-                    <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div>
-                            <h2 class="text-base font-black flex items-center gap-2 text-emerald-400">
-                                <i class="fa-solid fa-bell"></i> Rimanenze Fisiche Trasmesse dalle Barche
-                            </h2>
-                            <p class="text-xs text-slate-400 mt-1">Importa il file `.json` ricevuto via WhatsApp dalla barca per compilare automaticamente tutti i dati senza sovrascrivere i DDT.</p>
-                        </div>
-                        <label class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-black shadow flex items-center gap-1.5 cursor-pointer shrink-0">
-                            <i class="fa-solid fa-file-import"></i> Importa File Barca (.json)
-                            <input type="file" accept=".json" @change="importBackup($event)" class="hidden">
-                        </label>
+                    <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border p-4 rounded-2xl">
+                        <h2 class="text-base font-black flex items-center gap-2 text-emerald-400">
+                            <i class="fa-solid fa-bell"></i> Rimanenze Fisiche Trasmesse dalle Barche
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Appena apri un link WhatsApp inviato da una barca, i dati compaiono qui sotto già trascritti in automatico.</p>
                     </div>
 
                     <div class="space-y-3">
@@ -372,7 +358,7 @@
                                         <span class="font-black text-base text-emerald-400" x-text="getBoatName(sub.boatId)"></span>
                                         <span class="bg-emerald-500/20 text-emerald-300 text-[10px] px-2.5 py-0.5 rounded-full font-bold" x-text="'Data Conta: ' + sub.date"></span>
                                     </div>
-                                    <p class="text-xs text-slate-400 mt-1" x-text="'Trasmesso alle ' + (sub.time || '') + ' • ' + sub.items.length + ' voci contate a bordo'"></p>
+                                    <p class="text-xs text-slate-400 mt-1" x-text="'Articoli trascritti automaticamente: ' + sub.items.length + ' voci'"></p>
                                 </div>
                                 <div class="flex items-center gap-2 w-full sm:w-auto">
                                     <button @click="openReconciliationModal(sub)" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-black shadow flex items-center justify-center gap-1.5">
@@ -391,7 +377,6 @@
                     </div>
                 </div>
 
-                <!-- 3. MAGAZZINO GENERALE -->
                 <div x-show="activeTab === 'magazzino'" class="space-y-4">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
                         <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-4 lg:col-span-5 space-y-3">
@@ -478,7 +463,6 @@
                     </div>
                 </div>
 
-                <!-- 4. FLOTTA BARCHE -->
                 <div x-show="activeTab === 'flotta'" class="space-y-4">
                     <div class="flex items-center gap-2">
                         <div class="relative flex-1">
@@ -529,7 +513,6 @@
                     </div>
                 </div>
 
-                <!-- 5. LISTINO PRODOTTI -->
                 <div x-show="activeTab === 'prodotti'" class="space-y-4">
                     <div :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'" class="border rounded-2xl p-4 space-y-3">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
@@ -564,7 +547,6 @@
                     </div>
                 </div>
 
-                <!-- 6. STORICO -->
                 <div x-show="activeTab === 'storico'" class="space-y-4">
                     <div class="flex flex-wrap gap-1.5">
                         <button @click="historySubTab = 'inventari'" :class="historySubTab === 'inventari' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold">📋 Verbali Cassa (<span x-text="inventoryLogs.length"></span>)</button>
@@ -698,7 +680,6 @@
         </div>
     </template>
 
-    <!-- SCHEDA BARCA 360° -->
     <div x-show="boatHub.open" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm sm:p-4 no-print" x-cloak>
         <div class="bg-slate-900 border-t sm:border border-slate-700 rounded-t-3xl sm:rounded-3xl max-w-4xl w-full shadow-2xl flex flex-col h-[90vh] sm:max-h-[85vh] overflow-hidden text-white">
             
@@ -741,7 +722,7 @@
 
             <div class="flex-1 overflow-y-auto p-4 space-y-4">
 
-                <div x-show="boatHub.tab === 'scarico'" class="space-y-3">
+                <div x-show="boatHub.tab === 'scarico'" class="space-y-3" x-cloak>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 mb-1">N° Bolla Carico Barca</label>
@@ -783,7 +764,7 @@
                     </button>
                 </div>
 
-                <div x-show="boatHub.tab === 'pendolari'" class="space-y-3">
+                <div x-show="boatHub.tab === 'pendolari'" class="space-y-3" x-cloak>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <select x-model="pendolariForm.sheetType" @change="onSheetTypeChange()" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-2.5 py-2 text-xs font-bold">
                             <option value="pendolari">🎟️ 1. Pendolari (Prezzo Listino)</option>
@@ -821,7 +802,7 @@
                     </button>
                 </div>
 
-                <div x-show="boatHub.tab === 'spostamento'" class="space-y-3">
+                <div x-show="boatHub.tab === 'spostamento'" class="space-y-3" x-cloak>
                     <div class="grid grid-cols-2 gap-2">
                         <input type="text" x-model="boatTransferForm.bollaNumber" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-2.5 py-2 text-xs font-bold" placeholder="Bolla Spostamento N°">
                         <select x-model="boatTransferForm.toBoatId" class="w-full bg-slate-950 border border-slate-800 text-amber-400 rounded-xl px-2.5 py-2 text-xs font-bold">
@@ -863,7 +844,6 @@
         </div>
     </div>
 
-    <!-- MODAL RISCONTRO CASSA -->
     <template x-if="reconciliationModal.open">
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto no-print">
             <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-5xl w-full p-6 shadow-2xl space-y-4 text-white my-6 max-h-[92vh] overflow-y-auto">
@@ -935,7 +915,6 @@
         </div>
     </template>
 
-    <!-- MODAL PRODOTTO & BARCA -->
     <div x-show="productModal.open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 no-print" x-cloak>
         <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-3 shadow-2xl text-white">
             <h3 class="text-base font-extrabold" x-text="productModal.isEdit ? 'Modifica Prodotto' : 'Nuovo Prodotto'"></h3>
@@ -976,7 +955,6 @@
         </div>
     </div>
 
-    <!-- MODAL STAMPA DDT -->
     <template x-if="printModal.open">
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto print-modal-wrapper">
             <div class="bg-white text-slate-900 rounded-none max-w-3xl w-full p-8 shadow-2xl border border-slate-300 font-sans text-xs" id="printable-area">
@@ -1041,7 +1019,6 @@
         </div>
     </template>
 
-    <!-- MODAL STAMPA VERBALE -->
     <template x-if="inventoryPrintModal.open">
         <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto print-modal-wrapper">
             <div class="bg-white text-slate-900 rounded-xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-slate-300 font-sans text-xs my-4" id="printable-inventory-area">
@@ -1112,7 +1089,6 @@
         </div>
     </template>
 
-    <!-- Script Applicazione -->
     <script>
         function appData() {
             return {
@@ -1128,7 +1104,7 @@
                 pendolariSheets: [],
                 inventoryLogs: [],
                 pendingBoatSubmissions: [],
-                syncChannel: null,
+                incomingLinkBoatName: '',
 
                 passwordModalOpen: false,
                 enteredPassword: '',
@@ -1202,812 +1178,4 @@
                     return this.productGroups.find(g => g.groupId === productId || g.memberIds.includes(productId)) || null;
                 },
                 getNormalizedGroupId(productId) {
-                    const grp = this.getGroupInfoForProduct(productId);
-                    return grp ? grp.groupId : productId;
-                },
-                getGroupedSelectableProducts() {
-                    const result = [];
-                    const addedGroups = new Set();
-                    this.products.forEach(p => {
-                        const grp = this.getGroupInfoForProduct(p.id);
-                        if (grp) {
-                            if (!addedGroups.has(grp.groupId)) {
-                                addedGroups.add(grp.groupId);
-                                result.push({ id: grp.groupId, name: grp.name, pendolariPrice: grp.pendolariPrice, sellPrice: grp.sellPrice, costPrice: p.costPrice });
-                            }
-                        } else {
-                            result.push(p);
-                        }
-                    });
-                    return result;
-                },
-
-                loadAllStateFromStorage() {
-                    const savedProducts = localStorage.getItem('gest_products');
-                    const savedLoads = localStorage.getItem('gest_loads');
-                    const savedBoats = localStorage.getItem('gest_boats');
-                    const savedTransfers = localStorage.getItem('gest_transfers');
-                    const savedBoatTransfers = localStorage.getItem('gest_boat_transfers');
-                    const savedPendolari = localStorage.getItem('gest_pendolari');
-                    const savedInventories = localStorage.getItem('gest_inventories');
-                    const savedSubmissions = localStorage.getItem('gest_pending_subs');
-                    const savedPwd = localStorage.getItem('gest_office_pwd');
-
-                    if (savedProducts) this.products = JSON.parse(savedProducts);
-                    if (savedLoads) this.warehouseLoads = JSON.parse(savedLoads);
-                    if (savedBoats) this.boats = JSON.parse(savedBoats);
-                    if (savedTransfers) this.transfers = JSON.parse(savedTransfers);
-                    if (savedBoatTransfers) this.boatTransfers = JSON.parse(savedBoatTransfers);
-                    if (savedPendolari) this.pendolariSheets = JSON.parse(savedPendolari);
-                    if (savedInventories) this.inventoryLogs = JSON.parse(savedInventories);
-                    if (savedSubmissions) this.pendingBoatSubmissions = JSON.parse(savedSubmissions);
-                    if (savedPwd) this.officePassword = savedPwd;
-                },
-
-                initData() {
-                    const savedTheme = localStorage.getItem('gest_theme');
-                    if (savedTheme !== null) this.isDarkMode = savedTheme === 'dark';
-
-                    this.loadAllStateFromStorage();
-
-                    if (this.products.length < 35) {
-                        this.products = [
-                            { id: 'p_acq_nat', name: 'Acqua Naturale 💧', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
-                            { id: 'p_acq_fri', name: 'Acqua Frizzante 🫧', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
-                            { id: 'p_acq_eq', name: 'ACQUA EQUIPAGGIO ⚓', costPrice: 0.3, pendolariPrice: 0.5, sellPrice: 1.0 },
-                            { id: 'p_ara', name: 'Arachidi / Frutta S. 🥜', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_bp', name: 'Borse Piccole 👜', costPrice: 3.0, pendolariPrice: 6.0, sellPrice: 6.0 },
-                            { id: 'p_bg', name: 'Borse Grandi 👜', costPrice: 5.0, pendolariPrice: 10.0, sellPrice: 10.0 },
-                            { id: 'p_bue_1', name: 'Bueno 🍫', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
-                            { id: 'p_bue_2', name: 'B-Ready 🍫', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
-                            { id: 'p_bue_3', name: 'Biscuits 🍫', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
-                            { id: 'p_cap', name: 'Cappelli 🧢', costPrice: 2.5, pendolariPrice: 5.0, sellPrice: 5.0 },
-                            { id: 'p_car_1', name: 'Caramelle 🍬', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_car_2', name: 'Gomme 🍬', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_cia', name: 'Cialde ☕', costPrice: 0.5, pendolariPrice: 1.0, sellPrice: 2.0 },
-                            { id: 'p_die', name: 'Dietor 🍬', costPrice: 0.0, pendolariPrice: 0.0, sellPrice: 0.0 },
-                            { id: 'p_fit', name: 'Fitness / Cereal Yo 🌾', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_fon_1', name: 'Fonzies 🍟', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_fon_2', name: 'Patatine 🍟', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_imp', name: 'Impermeabili 🧥', costPrice: 2.0, pendolariPrice: 3.25, sellPrice: 3.5 },
-                            { id: 'p_kin', name: 'Kinder Cards 🃏', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_lat', name: 'Latte 🥛', costPrice: 0.2, pendolariPrice: 0.5, sellPrice: 0.5 },
-                            { id: 'p_ltn_1', name: 'Coca Cola 🥤', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_2', name: 'Coca 0 🥤', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_3', name: 'Fanta 🥤', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_4', name: 'Sprite 🥤', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_5', name: 'Lemonsoda 🥤', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_6', name: 'Thé Pesca 🥤', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_ltn_7', name: 'Thé Limone 🥤', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.5 },
-                            { id: 'p_mag', name: 'Maglie 👕', costPrice: 2.5, pendolariPrice: 5.0, sellPrice: 5.0 },
-                            { id: 'p_mik', name: 'Mikado 🥖', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 3.0 },
-                            { id: 'p_muf', name: 'Muffin 🧁', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 3.0 },
-                            { id: 'p_nik', name: 'Nik Nok 🥜', costPrice: 1.0, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_pav', name: 'Pavesini 🍪', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_per', name: 'Peroni 🍺', costPrice: 1.0, pendolariPrice: 1.5, sellPrice: 4.5 },
-                            { id: 'p_pec', name: 'Peroni Capri 🍋', costPrice: 3.5, pendolariPrice: 7.5, sellPrice: 7.5 },
-                            { id: 'p_pri', name: 'Pringles 🥔', costPrice: 1.2, pendolariPrice: 2.0, sellPrice: 3.5 },
-                            { id: 'p_vin_1', name: 'Prosecco 🍷', costPrice: 2.0, pendolariPrice: 3.0, sellPrice: 6.0 },
-                            { id: 'p_vin_2', name: 'Vino 🍷', costPrice: 2.0, pendolariPrice: 3.0, sellPrice: 6.0 },
-                            { id: 'p_red_1', name: 'Red Bull ⚡', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
-                            { id: 'p_red_2', name: 'Gatorade ⚡', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
-                            { id: 'p_rin_1', name: 'Ringo 🍪', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_rin_2', name: 'Oreo 🍪', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_rin_3', name: 'Baiocchi 🍪', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_rit_1', name: 'Ritz 🍪', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
-                            { id: 'p_rit_2', name: 'Cipster 🍪', costPrice: 1.5, pendolariPrice: 2.5, sellPrice: 4.5 },
-                            { id: 'p_spr', name: 'Spritz 🍹', costPrice: 3.0, pendolariPrice: 8.0, sellPrice: 8.0 },
-                            { id: 'p_suc', name: 'Succo 🧃', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 3.5 },
-                            { id: 'p_the', name: 'The Camomilla 🍵', costPrice: 0.8, pendolariPrice: 1.5, sellPrice: 2.5 },
-                            { id: 'p_tuc', name: 'Tuc 🍪', costPrice: 1.2, pendolariPrice: 2.0, sellPrice: 4.0 },
-                            { id: 'p_twi_1', name: 'Twix 🍫', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_twi_2', name: 'M&M 🍫', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_twi_3', name: 'KitKat 🍫', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_twi_4', name: 'Mars 🍫', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_twi_5', name: 'Snickers 🍫', costPrice: 0.8, pendolariPrice: 1.0, sellPrice: 2.5 },
-                            { id: 'p_clm', name: 'Calamite 🧲', costPrice: 1.5, pendolariPrice: 3.0, sellPrice: 3.0 },
-                            { id: 'p_ptc', name: 'Portachiavi 🔑', costPrice: 1.5, pendolariPrice: 3.0, sellPrice: 3.0 },
-                            { id: 'p_cuc', name: 'Cucchiaio 🥄', costPrice: 1.5, pendolariPrice: 3.0, sellPrice: 3.0 },
-                            { id: 'p_cos', name: 'Costumi 🩳', costPrice: 2.5, pendolariPrice: 5.0, sellPrice: 5.0 },
-                            { id: 'p_dec', name: 'Decaffeinato ☕', costPrice: 1.0, pendolariPrice: 2.5, sellPrice: 2.5 },
-                            { id: 'p_gin', name: 'Ginseng ☕', costPrice: 1.0, pendolariPrice: 2.5, sellPrice: 2.5 },
-                            { id: 'p_orz', name: 'Orzo ☕', costPrice: 1.0, pendolariPrice: 2.5, sellPrice: 2.5 }
-                        ];
-                        this.saveToLocalStorage();
-                    }
-
-                    if (this.boats.length === 0) {
-                        const initialBoatNames = [
-                            "NAPOLI JET", "SALERNO JET", "AMALFI JET", "SUPER JET", "CAPRI JET", 
-                            "ISCHIA JET", "SUPER FLYTE", "TREMITI JET", "VESUVIO JET", "JUMBO JET", 
-                            "SORRENTO JET", "GIUNONE JET", "EUROPA JET", "CITTÀ DI SORRENTO", "PICASSO", 
-                            "FRECCIA D ARGENTO", "BLIZ", "DELFINO", "URAGANO", "ACQUARIUS", "RAID"
-                        ];
-                        this.boats = initialBoatNames.map((name, idx) => ({ id: 'b_' + (idx + 1), name }));
-                        this.saveToLocalStorage();
-                    }
-
-                    window.addEventListener('storage', (e) => {
-                        if (e.key && e.key.startsWith('gest_')) {
-                            const prevCount = this.pendingBoatSubmissions.length;
-                            this.loadAllStateFromStorage();
-                            if (this.pendingBoatSubmissions.length > prevCount && this.appMode === 'ufficio') {
-                                const lastSub = this.pendingBoatSubmissions[this.pendingBoatSubmissions.length - 1];
-                                this.showNotify('Nuovo Inventario Ricevuto!', `${this.getBoatName(lastSub.boatId)} ha trasmesso le rimanenze.`, 'alert');
-                            }
-                        }
-                    });
-
-                    if ('BroadcastChannel' in window) {
-                        this.syncChannel = new BroadcastChannel('ag_coffee_sync');
-                        this.syncChannel.onmessage = (event) => {
-                            this.loadAllStateFromStorage();
-                            if (event.data?.type === 'NEW_SUBMISSION' && this.appMode === 'ufficio') {
-                                this.showNotify('Nuovo Inventario Ricevuto!', `${event.data.boatName} ha trasmesso le rimanenze.`, 'alert');
-                            }
-                        };
-                    }
-                },
-
-                openPasswordModal() {
-                    this.enteredPassword = '';
-                    this.passwordModalOpen = true;
-                },
-                verifyOfficePassword() {
-                    if (this.enteredPassword === this.officePassword) {
-                        this.passwordModalOpen = false;
-                        this.enteredPassword = '';
-                        this.switchMode('ufficio');
-                    } else {
-                        this.showNotify('Accesso Negato', 'Password non corretta.', 'error');
-                        this.enteredPassword = '';
-                    }
-                },
-                openSettingsModal() {
-                    this.newPasswordInput = '';
-                    this.confirmPasswordInput = '';
-                    this.settingsModalOpen = true;
-                },
-                saveNewOfficePassword() {
-                    if (!this.newPasswordInput || this.newPasswordInput.length < 3) {
-                        this.showNotify('Attenzione', 'La password deve avere almeno 3 caratteri.', 'error');
-                        return;
-                    }
-                    if (this.newPasswordInput !== this.confirmPasswordInput) {
-                        this.showNotify('Errore', 'Le due password non coincidono.', 'error');
-                        return;
-                    }
-                    this.officePassword = this.newPasswordInput;
-                    localStorage.setItem('gest_office_pwd', this.officePassword);
-                    this.settingsModalOpen = false;
-                    this.showNotify('Password Aggiornata', 'La nuova password dell\'ufficio è attiva.');
-                },
-
-                switchMode(mode) {
-                    this.loadAllStateFromStorage();
-                    this.appMode = mode;
-                    if (mode === 'ufficio' && this.pendingBoatSubmissions.length > 0) {
-                        this.showNotify('Notifiche Rimanenze', `Ci sono ${this.pendingBoatSubmissions.length} inventari trasmessi dalle barche da verificare.`, 'alert');
-                    }
-                },
-
-                saveToLocalStorage(broadcastPayload = null) {
-                    localStorage.setItem('gest_products', JSON.stringify(this.products));
-                    localStorage.setItem('gest_loads', JSON.stringify(this.warehouseLoads));
-                    localStorage.setItem('gest_boats', JSON.stringify(this.boats));
-                    localStorage.setItem('gest_transfers', JSON.stringify(this.transfers));
-                    localStorage.setItem('gest_boat_transfers', JSON.stringify(this.boatTransfers));
-                    localStorage.setItem('gest_pendolari', JSON.stringify(this.pendolariSheets));
-                    localStorage.setItem('gest_inventories', JSON.stringify(this.inventoryLogs));
-                    localStorage.setItem('gest_pending_subs', JSON.stringify(this.pendingBoatSubmissions));
-
-                    if (this.syncChannel) {
-                        this.syncChannel.postMessage(broadcastPayload || { type: 'STATE_UPDATED' });
-                    }
-                },
-
-                toggleTheme() {
-                    this.isDarkMode = !this.isDarkMode;
-                    localStorage.setItem('gest_theme', this.isDarkMode ? 'dark' : 'light');
-                },
-
-                showNotify(title, message, type = 'success') {
-                    this.notification = { show: true, title, message, type };
-                    setTimeout(() => { this.notification.show = false; }, 4500);
-                },
-                formatCurrency(val) {
-                    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val || 0);
-                },
-                getProductName(id) {
-                    const grp = this.productGroups.find(g => g.groupId === id);
-                    if (grp) return grp.name;
-                    const p = this.products.find(item => item.id === id);
-                    return p ? p.name : 'Prodotto';
-                },
-                getBoatName(id) {
-                    const b = this.boats.find(item => item.id === id);
-                    return b ? b.name : 'Barca';
-                },
-                handleEscapeKey() {
-                    if (this.settingsModalOpen) { this.settingsModalOpen = false; return; }
-                    if (this.passwordModalOpen) { this.passwordModalOpen = false; return; }
-                    if (this.printModal.open) { this.printModal.open = false; return; }
-                    if (this.inventoryPrintModal.open) { this.inventoryPrintModal.open = false; return; }
-                    if (this.reconciliationModal.open) { this.reconciliationModal.open = false; return; }
-                    if (this.productModal.open) { this.productModal.open = false; return; }
-                    if (this.boatModal.open) { this.boatModal.open = false; return; }
-                    if (this.boatHub.open) { this.boatHub.open = false; }
-                },
-
-                loadCrewInventory() {
-                    this.crewInventoryRows = this.getGroupedSelectableProducts().map(p => ({
-                        productId: p.id,
-                        productName: p.name,
-                        physicalQty: 0
-                    }));
-                },
-                get filteredCrewInventoryRows() {
-                    if (!this.searchFilter.crewProducts) return this.crewInventoryRows;
-                    const q = this.searchFilter.crewProducts.toLowerCase();
-                    return this.crewInventoryRows.filter(r => r.productName.toLowerCase().includes(q));
-                },
-                buildCurrentCrewSubmission() {
-                    const now = new Date();
-                    const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                    return {
-                        id: 'sub_' + Date.now(),
-                        timestamp: Date.now(),
-                        boatId: this.selectedBoatForCrew,
-                        date: this.crewInventoryDate,
-                        time: timeStr,
-                        items: JSON.parse(JSON.stringify(this.crewInventoryRows))
-                    };
-                },
-                copyCrewWhatsAppReport() {
-                    if (!this.selectedBoatForCrew) {
-                        this.showNotify('Attenzione', 'Seleziona prima la tua barca.', 'error');
-                        return;
-                    }
-                    const sub = this.buildCurrentCrewSubmission();
-                    const boatName = this.getBoatName(sub.boatId);
-                    const countedItems = sub.items.filter(r => Number(r.physicalQty || 0) > 0);
-
-                    let summaryText = `📊 *RIMANENZE FISICHE: ${boatName}*\n📅 Data: ${sub.date} (${sub.time})\n\n`;
-                    if (countedItems.length > 0) {
-                        countedItems.forEach(i => {
-                            summaryText += `• ${i.productName}: *${i.physicalQty} Pz*\n`;
-                        });
-                    } else {
-                        summaryText += `_Tutte le rimanenze a 0 Pz_\n`;
-                    }
-
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(summaryText).then(() => {
-                            this.showNotify('Copiato negli appunti!', 'Apri WhatsApp e incolla il messaggio per l\'ufficio.');
-                        }).catch(() => {
-                            this.showNotify('Pronto', 'Usa il pulsante 2 per scaricare il file scheda.');
-                        });
-                    } else {
-                        this.showNotify('Pronto', 'Usa il pulsante 2 per scaricare il file scheda.');
-                    }
-                },
-                downloadCrewSubmissionFile() {
-                    if (!this.selectedBoatForCrew) {
-                        this.showNotify('Attenzione', 'Seleziona prima la tua barca.', 'error');
-                        return;
-                    }
-                    const sub = this.buildCurrentCrewSubmission();
-                    const boatName = this.getBoatName(sub.boatId).replace(/\s+/g, '_');
-                    const payload = { type: 'boat_submission', submission: sub };
-                    const fileName = `rimanenze_${boatName}_${sub.date}.json`;
-                    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-                    const file = new File([blob], fileName, { type: 'application/json' });
-
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        navigator.share({
-                            files: [file],
-                            title: `Rimanenze ${boatName}`,
-                            text: `Scheda rimanenze ${boatName} del ${sub.date}`
-                        }).catch(() => {});
-                    } else {
-                        const a = document.createElement('a');
-                        a.href = URL.createObjectURL(blob);
-                        a.download = fileName;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        this.showNotify('File Scaricato', `File "${fileName}" pronto da allegare su WhatsApp!`);
-                    }
-                },
-
-                deletePendingSubmission(id) {
-                    this.pendingBoatSubmissions = this.pendingBoatSubmissions.filter(s => s.id !== id);
-                    this.saveToLocalStorage();
-                },
-
-                openReconciliationModal(sub) {
-                    this.reconciliationModal.submission = sub;
-                    const boatId = sub.boatId;
-
-                    const boatInvs = this.inventoryLogs.filter(i => i.boatId === boatId);
-                    const lastInv = boatInvs.length > 0 ? boatInvs[boatInvs.length - 1] : null;
-                    const lastTs = lastInv ? (lastInv.timestamp || 0) : 0;
-
-                    let initMap = {}, addMap = {}, movMap = {}, pendMap = {}, pendRevMap = {};
-
-                    if (lastInv && lastInv.items) {
-                        lastInv.items.forEach(i => {
-                            const nid = this.getNormalizedGroupId(i.productId);
-                            initMap[nid] = (initMap[nid] || 0) + Number(i.physicalQty || 0);
-                        });
-                    }
-
-                    this.transfers.filter(t => t.boatId === boatId && (t.timestamp || 0) > lastTs).forEach(t => {
-                        t.items.forEach(i => {
-                            const nid = this.getNormalizedGroupId(i.productId);
-                            addMap[nid] = (addMap[nid] || 0) + Number(i.quantity || 0);
-                        });
-                    });
-
-                    this.boatTransfers.filter(bt => bt.toBoatId === boatId && (bt.timestamp || 0) > lastTs).forEach(bt => {
-                        bt.items.forEach(i => {
-                            const nid = this.getNormalizedGroupId(i.productId);
-                            movMap[nid] = (movMap[nid] || 0) + Number(i.quantity || 0);
-                        });
-                    });
-
-                    this.boatTransfers.filter(bt => bt.fromBoatId === boatId && (bt.timestamp || 0) > lastTs).forEach(bt => {
-                        bt.items.forEach(i => {
-                            const nid = this.getNormalizedGroupId(i.productId);
-                            movMap[nid] = (movMap[nid] || 0) - Number(i.quantity || 0);
-                        });
-                    });
-
-                    this.pendolariSheets.filter(ps => ps.boatId === boatId && (ps.timestamp || 0) > lastTs).forEach(ps => {
-                        ps.items.forEach(i => {
-                            const nid = this.getNormalizedGroupId(i.productId);
-                            pendMap[nid] = (pendMap[nid] || 0) + Number(i.quantity || 0);
-                            const p = ps.sheetType === 'comando' ? 0 : Number(i.customPrice || 0);
-                            pendRevMap[nid] = (pendRevMap[nid] || 0) + (Number(i.quantity || 0) * p);
-                        });
-                    });
-
-                    this.reconciliationRows = sub.items.map(item => {
-                        const id = item.productId;
-                        const initialQty = initMap[id] || 0;
-                        const addedQty = addMap[id] || 0;
-                        const movedQty = movMap[id] || 0;
-                        const theoreticalQty = Math.max(0, initialQty + addedQty + movedQty);
-                        const physicalQty = Number(item.physicalQty || 0);
-                        const soldQty = Math.max(0, theoreticalQty - physicalQty);
-                        const pendolariQty = pendMap[id] || 0;
-                        const explicitPendolariRev = pendRevMap[id] || 0;
-
-                        const effPendQty = Math.min(soldQty, pendolariQty);
-                        const pubSoldQty = Math.max(0, soldQty - effPendQty);
-                        const pendRev = pendolariQty > 0 ? explicitPendolariRev * Math.min(1, effPendQty / pendolariQty) : 0;
-
-                        const pObj = this.products.find(x => x.id === id) || this.getGroupedSelectableProducts().find(x => x.id === id);
-                        const sellPrice = pObj ? (pObj.sellPrice || 0) : 0;
-                        const expectedRevenue = pendRev + (pubSoldQty * sellPrice);
-
-                        return {
-                            productId: id,
-                            productName: item.productName,
-                            initialQty, addedQty, movedQty, theoreticalQty,
-                            physicalQty, soldQty, pendolariQty, sellPrice, expectedRevenue
-                        };
-                    });
-
-                    this.reconciliationExpectedTotal = this.reconciliationRows.reduce((sum, r) => sum + r.expectedRevenue, 0);
-                    this.reconciliationActualRevenue = Number(this.reconciliationExpectedTotal.toFixed(2));
-                    this.reconciliationDiff = 0;
-
-                    this.reconciliationModal.open = true;
-                },
-
-                updateReconciliationDiff() {
-                    this.reconciliationDiff = Number(this.reconciliationActualRevenue || 0) - this.reconciliationExpectedTotal;
-                },
-
-                finalizeReconciliation() {
-                    const sub = this.reconciliationModal.submission;
-                    const ts = Date.now();
-                    this.updateReconciliationDiff();
-                    const newInv = {
-                        id: 'inv_' + ts,
-                        timestamp: ts,
-                        boatId: sub.boatId,
-                        date: sub.date,
-                        items: JSON.parse(JSON.stringify(this.reconciliationRows)),
-                        expectedRevenue: this.reconciliationExpectedTotal,
-                        actualRevenue: Number(this.reconciliationActualRevenue || 0),
-                        cashDiff: this.reconciliationDiff
-                    };
-                    this.inventoryLogs.push(newInv);
-                    this.pendingBoatSubmissions = this.pendingBoatSubmissions.filter(s => s.id !== sub.id);
-                    this.saveToLocalStorage();
-                    this.reconciliationModal.open = false;
-                    this.openSavedInventoryPrint(newInv);
-                    this.showNotify('Sistema Aggiornato!', 'Verbale chiuso, giacenze di bordo e storico aggiornati.');
-                },
-
-                getBoatTotalItemsCount(boatId) {
-                    const invs = this.inventoryLogs.filter(i => i.boatId === boatId);
-                    const lastInv = invs.length > 0 ? invs[invs.length - 1] : null;
-                    const lastTs = lastInv ? (lastInv.timestamp || 0) : 0;
-                    let tot = 0;
-                    if (lastInv && lastInv.items) lastInv.items.forEach(i => tot += Number(i.physicalQty || 0));
-                    this.transfers.filter(t => t.boatId === boatId && (t.timestamp || 0) > lastTs).forEach(t => t.items.forEach(i => tot += Number(i.quantity || 0)));
-                    this.boatTransfers.filter(bt => bt.toBoatId === boatId && (bt.timestamp || 0) > lastTs).forEach(bt => bt.items.forEach(i => tot += Number(i.quantity || 0)));
-                    this.boatTransfers.filter(bt => bt.fromBoatId === boatId && (bt.timestamp || 0) > lastTs).forEach(bt => bt.items.forEach(i => tot -= Number(i.quantity || 0)));
-                    return Math.max(0, tot);
-                },
-                getLastInventoryDate(boatId) {
-                    const invs = this.inventoryLogs.filter(i => i.boatId === boatId);
-                    return invs.length > 0 ? invs[invs.length - 1].date : 'Mai';
-                },
-
-                openBoatHub(boatId, tab = 'scarico') {
-                    this.boatHub.boatId = boatId;
-                    this.boatHub.tab = tab;
-                    this.boatHub.open = true;
-                },
-                getWarehouseProductQty(productId) {
-                    let loaded = 0, transferred = 0;
-                    this.warehouseLoads.forEach(l => (l.items || [l]).forEach(i => { if (i.productId === productId) loaded += Number(i.quantity); }));
-                    this.transfers.forEach(t => t.items.forEach(i => { if (i.productId === productId) transferred += Number(i.quantity); }));
-                    return Math.max(0, loaded - transferred);
-                },
-                getWarehouseStockSummary() {
-                    return this.products.map(p => {
-                        const qty = this.getWarehouseProductQty(p.id);
-                        return { productId: p.id, name: p.name, qty, totalCost: qty * p.costPrice };
-                    });
-                },
-                getTotalWarehouseCostValue() {
-                    return this.getWarehouseStockSummary().reduce((sum, i) => sum + i.totalCost, 0);
-                },
-                getProductTotalLoaded(productId) {
-                    let total = 0;
-                    this.warehouseLoads.forEach(l => (l.items || [l]).forEach(i => { if (i.productId === productId) total += Number(i.quantity); }));
-                    return total;
-                },
-                getProductTotalTransferred(productId) {
-                    let total = 0;
-                    this.transfers.forEach(t => t.items.forEach(i => { if (i.productId === productId) total += Number(i.quantity); }));
-                    return total;
-                },
-                getProductTimeline(productId) {
-                    const events = [];
-                    const normId = this.getNormalizedGroupId(productId);
-                    this.warehouseLoads.forEach(l => {
-                        (l.items || [l]).forEach(i => {
-                            if (i.productId === productId) {
-                                events.push({ id: l.id + i.productId, ts: l.timestamp || 0, date: l.date, type: 'Carico DDT Magazzino', detail: l.docNumber, qtyLabel: '+' + i.quantity + ' Pz', color: 'text-blue-400' });
-                            }
-                        });
-                    });
-                    this.transfers.forEach(t => {
-                        t.items.forEach(i => {
-                            if (i.productId === productId) {
-                                events.push({ id: t.id + i.productId, ts: t.timestamp || 0, date: t.date, type: 'Scarico su Barca', detail: `${t.bollaNumber} ➔ ${this.getBoatName(t.boatId)}`, qtyLabel: '-' + i.quantity + ' Pz', color: 'text-purple-400' });
-                            }
-                        });
-                    });
-                    this.boatTransfers.forEach(bt => {
-                        bt.items.forEach(i => {
-                            if (i.productId === productId || i.productId === normId) {
-                                events.push({ id: bt.id + i.productId, ts: bt.timestamp || 0, date: bt.date, type: 'Spostamento Barche', detail: `${this.getBoatName(bt.fromBoatId)} ➔ ${this.getBoatName(bt.toBoatId)}`, qtyLabel: i.quantity + ' Pz', color: 'text-amber-400' });
-                            }
-                        });
-                    });
-                    this.pendolariSheets.forEach(ps => {
-                        ps.items.forEach(i => {
-                            if (i.productId === productId || i.productId === normId) {
-                                const label = ps.sheetType === 'comando' ? 'Buono Comando (0€)' : (ps.sheetType === 'equipaggio' ? 'Guide/Equipaggio' : 'Pendolari');
-                                events.push({ id: ps.id + i.productId, ts: ps.timestamp || 0, date: ps.date, type: label, detail: this.getBoatName(ps.boatId), qtyLabel: i.quantity + ' Pz', color: 'text-sky-400' });
-                            }
-                        });
-                    });
-                    return events.sort((a, b) => b.ts - a.ts);
-                },
-
-                openProductModal() {
-                    this.productModal.isEdit = false;
-                    this.productModal.form = { id: 'p_' + Date.now(), name: '', costPrice: 0, pendolariPrice: 0, sellPrice: 0 };
-                    this.productModal.open = true;
-                },
-                editProduct(p) {
-                    this.productModal.isEdit = true;
-                    this.productModal.form = { ...p };
-                    this.productModal.open = true;
-                },
-                saveProduct() {
-                    if (this.productModal.isEdit) {
-                        const i = this.products.findIndex(p => p.id === this.productModal.form.id);
-                        if (i !== -1) this.products[i] = { ...this.productModal.form };
-                    } else {
-                        this.products.push({ ...this.productModal.form });
-                    }
-                    this.productModal.open = false;
-                    this.saveToLocalStorage();
-                },
-                deleteProduct(id) {
-                    this.products = this.products.filter(p => p.id !== id);
-                    this.saveToLocalStorage();
-                },
-
-                openBoatModal() {
-                    this.boatModal.isEdit = false;
-                    this.boatModal.form = { id: 'boat_' + Date.now(), name: '' };
-                    this.boatModal.open = true;
-                },
-                editBoat(b) {
-                    this.boatModal.isEdit = true;
-                    this.boatModal.form = { ...b };
-                    this.boatModal.open = true;
-                },
-                saveBoat() {
-                    if (this.boatModal.isEdit) {
-                        const i = this.boats.findIndex(b => b.id === this.boatModal.form.id);
-                        if (i !== -1) this.boats[i] = { ...this.boatModal.form };
-                    } else {
-                        this.boats.push({ ...this.boatModal.form });
-                    }
-                    this.boatModal.open = false;
-                    this.saveToLocalStorage();
-                },
-                deleteBoat(id) {
-                    this.boats = this.boats.filter(b => b.id !== id);
-                    this.saveToLocalStorage();
-                },
-
-                onSelectSingleLoadProduct() {
-                    const p = this.products.find(x => x.id === this.currentLoadItem.productId);
-                    if (p) this.currentLoadItem.costPrice = p.costPrice;
-                },
-                addWarehouseLoad() {
-                    if (!this.loadForm.docNumber || this.loadForm.items.length === 0) return;
-                    this.warehouseLoads.push({ id: 'load_' + Date.now(), timestamp: Date.now(), ...this.loadForm, items: [...this.loadForm.items] });
-                    this.saveToLocalStorage();
-                    this.loadForm.docNumber = '';
-                    this.loadForm.items = [];
-                    this.showNotify('Caricato', 'DDT registrato in magazzino.');
-                },
-                addLoadItem() {
-                    if (!this.currentLoadItem.productId || !this.currentLoadItem.quantity) return;
-                    this.loadForm.items.push({ ...this.currentLoadItem });
-                    this.currentLoadItem = { productId: '', quantity: '', costPrice: '' };
-                },
-                removeLoadItem(idx) { this.loadForm.items.splice(idx, 1); },
-                deleteWarehouseLoad(id) {
-                    this.warehouseLoads = this.warehouseLoads.filter(l => l.id !== id);
-                    this.saveToLocalStorage();
-                },
-                addAllMultiLoadItems() {
-                    let count = 0;
-                    this.products.forEach(p => {
-                        const q = Number(this.multiLoadQuantities[p.id] || 0);
-                        if (q > 0) {
-                            this.loadForm.items.push({ productId: p.id, quantity: q, costPrice: p.costPrice });
-                            this.multiLoadQuantities[p.id] = '';
-                            count++;
-                        }
-                    });
-                    if (count > 0) this.showNotify('Aggiunti', `${count} prodotti nel DDT.`);
-                },
-
-                createTransferFromHub() {
-                    if (!this.transferForm.bollaNumber || this.transferForm.items.length === 0) return;
-                    const newT = { id: 't_' + Date.now(), timestamp: Date.now(), boatId: this.boatHub.boatId, ...this.transferForm, items: [...this.transferForm.items] };
-                    this.transfers.push(newT);
-                    this.saveToLocalStorage();
-                    this.transferForm.bollaNumber = '';
-                    this.transferForm.items = [];
-                    this.boatHub.open = false;
-                    this.showNotify('Caricata', 'Bolla registrata sulla barca.');
-                },
-                addAllMultiTransferItems() {
-                    this.products.forEach(p => {
-                        const q = Number(this.multiTransferQuantities[p.id] || 0);
-                        if (q > 0) {
-                            this.transferForm.items.push({ productId: p.id, quantity: q });
-                            this.multiTransferQuantities[p.id] = '';
-                        }
-                    });
-                },
-                deleteTransfer(id) {
-                    this.transfers = this.transfers.filter(t => t.id !== id);
-                    this.saveToLocalStorage();
-                },
-
-                onSheetTypeChange() {
-                    if (this.pendolariForm.sheetType === 'comando') {
-                        this.currentPendolariItem.customPrice = 0;
-                    } else {
-                        this.onPendolariProductSelect();
-                    }
-                },
-                onPendolariProductSelect() {
-                    if (this.pendolariForm.sheetType === 'comando') {
-                        this.currentPendolariItem.customPrice = 0;
-                        return;
-                    }
-                    const grp = this.getGroupInfoForProduct(this.currentPendolariItem.productId);
-                    if (grp) {
-                        this.currentPendolariItem.customPrice = this.pendolariForm.sheetType === 'equipaggio' ? Number((grp.pendolariPrice * 0.5).toFixed(2)) : grp.pendolariPrice;
-                    } else {
-                        const p = this.products.find(x => x.id === this.currentPendolariItem.productId);
-                        this.currentPendolariItem.customPrice = p ? (this.pendolariForm.sheetType === 'equipaggio' ? Number((p.pendolariPrice * 0.5).toFixed(2)) : p.pendolariPrice) : 0;
-                    }
-                },
-                addPendolariItem() {
-                    if (!this.currentPendolariItem.productId) return;
-                    const price = this.pendolariForm.sheetType === 'comando' ? 0 : Number(this.currentPendolariItem.customPrice || 0);
-                    this.pendolariForm.items.push({ productId: this.currentPendolariItem.productId, quantity: Number(this.currentPendolariItem.quantity || 1), customPrice: price });
-                    this.currentPendolariItem = { productId: '', quantity: 1, customPrice: 0 };
-                },
-                savePendolariSheetFromHub() {
-                    if (this.pendolariForm.items.length === 0) return;
-                    this.pendolariSheets.push({ id: 'ps_' + Date.now(), timestamp: Date.now(), boatId: this.boatHub.boatId, ...this.pendolariForm, items: [...this.pendolariForm.items] });
-                    this.saveToLocalStorage();
-                    this.pendolariForm.notes = '';
-                    this.pendolariForm.items = [];
-                    this.boatHub.open = false;
-                    this.showNotify('Registrato', 'Buono / Scheda salvata correttamente.');
-                },
-
-                createBoatTransferFromHub() {
-                    if (!this.boatTransferForm.bollaNumber || !this.boatTransferForm.toBoatId || this.boatTransferForm.items.length === 0) return;
-                    this.boatTransfers.push({ id: 'bt_' + Date.now(), timestamp: Date.now(), fromBoatId: this.boatHub.boatId, ...this.boatTransferForm, items: [...this.boatTransferForm.items] });
-                    this.saveToLocalStorage();
-                    this.boatTransferForm.bollaNumber = '';
-                    this.boatTransferForm.toBoatId = '';
-                    this.boatTransferForm.items = [];
-                    this.boatHub.open = false;
-                    this.showNotify('Trasferito', 'Spostamento tra barche completato.');
-                },
-                addAllMultiBoatTransferItems() {
-                    this.getGroupedSelectableProducts().forEach(p => {
-                        const q = Number(this.multiBoatTransferQuantities[p.id] || 0);
-                        if (q > 0) {
-                            this.boatTransferForm.items.push({ productId: p.id, quantity: q });
-                            this.multiBoatTransferQuantities[p.id] = '';
-                        }
-                    });
-                },
-                deleteBoatTransfer(id) {
-                    this.boatTransfers = this.boatTransfers.filter(bt => bt.id !== id);
-                    this.saveToLocalStorage();
-                },
-
-                printDocLoad(load) {
-                    this.printModal = { open: true, title: 'DDT Magazzino', docNumber: load.docNumber, date: load.date, destination: 'MAGAZZINO GENERALE', destinationCity: 'POZZUOLI', items: load.items || [load] };
-                },
-                printTransfer(t) {
-                    this.printModal = { open: true, title: 'Bolla Carico Barca', docNumber: t.bollaNumber, date: t.date, destination: this.getBoatName(t.boatId), destinationCity: 'NAPOLI', items: t.items };
-                },
-                printBoatTransferDoc(bt) {
-                    this.printModal = { open: true, title: 'Bolla Spostamento', docNumber: bt.bollaNumber, date: bt.date, destination: this.getBoatName(bt.toBoatId), destinationCity: 'NAPOLI', items: bt.items };
-                },
-                openSavedInventoryPrint(inv) {
-                    this.inventoryPrintModal.data = {
-                        boatName: this.getBoatName(inv.boatId),
-                        date: inv.date,
-                        expectedRevenue: inv.expectedRevenue,
-                        actualRevenue: inv.actualRevenue,
-                        cashDiff: inv.cashDiff,
-                        items: inv.items.map(i => ({ ...i, productName: i.productName || this.getProductName(i.productId) }))
-                    };
-                    this.inventoryPrintModal.open = true;
-                },
-                deleteInventoryLog(id) {
-                    this.inventoryLogs = this.inventoryLogs.filter(i => i.id !== id);
-                    this.saveToLocalStorage();
-                },
-                exportSingleInventoryExcel(inv) {
-                    if (typeof XLSX === 'undefined') return;
-                    const boatName = this.getBoatName(inv.boatId);
-                    const wb = XLSX.utils.book_new();
-                    const rows = [
-                        ["VERBALE INVENTARIO - " + boatName + " (" + inv.date + ")"],
-                        [],
-                        ["Voce", "Iniziale", "Carichi", "Spostamenti", "Teorica", "Fisica", "Venduti", "Pend/Buoni", "Prezzo Pub.", "Incasso Atteso"]
-                    ];
-                    inv.items.forEach(i => rows.push([i.productName || this.getProductName(i.productId), i.initialQty ?? 0, i.addedQty ?? 0, i.movedQty ?? 0, i.theoreticalQty, i.physicalQty, i.soldQty, i.pendolariQty ?? 0, i.sellPrice, i.expectedRevenue]));
-                    rows.push([], ["Incasso Atteso:", inv.expectedRevenue], ["Incasso Reale:", inv.actualRevenue], ["Plus/Ammanco:", inv.cashDiff]);
-                    const ws = XLSX.utils.aoa_to_sheet(rows);
-                    XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-                    XLSX.writeFile(wb, `Inventario_${boatName}_${inv.date}.xlsx`);
-                },
-                exportAllInventoriesExcel() {
-                    if (typeof XLSX === 'undefined') return;
-                    const wb = XLSX.utils.book_new();
-                    const rows = [["Data", "Barca", "Atteso", "Reale", "Plus/Ammanco"]];
-                    this.inventoryLogs.forEach(i => rows.push([i.date, this.getBoatName(i.boatId), i.expectedRevenue, i.actualRevenue, i.cashDiff]));
-                    const ws = XLSX.utils.aoa_to_sheet(rows);
-                    XLSX.utils.book_append_sheet(wb, ws, "Storico");
-                    XLSX.writeFile(wb, `Storico_Inventari.xlsx`);
-                },
-                triggerPrint() { window.print(); },
-
-                exportBackup() {
-                    const data = { products: this.products, warehouseLoads: this.warehouseLoads, boats: this.boats, transfers: this.transfers, boatTransfers: this.boatTransfers, pendolariSheets: this.pendolariSheets, inventoryLogs: this.inventoryLogs, pendingBoatSubmissions: this.pendingBoatSubmissions };
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = `backup_flotta_${new Date().toISOString().slice(0,10)}.json`;
-                    a.click();
-                },
-                importBackup(e) {
-                    const f = e.target.files[0];
-                    if (!f) return;
-                    const r = new FileReader();
-                    r.onload = (ev) => {
-                        try {
-                            const d = JSON.parse(ev.target.result);
-                            if (d.type === 'boat_submission' && d.submission) {
-                                if (!this.pendingBoatSubmissions.some(s => s.id === d.submission.id)) {
-                                    this.pendingBoatSubmissions.push(d.submission);
-                                    this.saveToLocalStorage();
-                                }
-                                this.activeTab = 'rimanenze';
-                                this.showNotify('Scheda Barca Importata', `Rimanenze di ${this.getBoatName(d.submission.boatId)} aggiunte alle notifiche.`);
-                            } else if (d.products) {
-                                this.products = d.products;
-                                this.boats = d.boats || this.boats;
-                                this.warehouseLoads = d.warehouseLoads || [];
-                                this.transfers = d.transfers || [];
-                                this.boatTransfers = d.boatTransfers || [];
-                                this.pendolariSheets = d.pendolariSheets || [];
-                                this.inventoryLogs = d.inventoryLogs || [];
-                                this.pendingBoatSubmissions = d.pendingBoatSubmissions || [];
-                                this.saveToLocalStorage();
-                                this.showNotify('Ripristinato', 'Backup completo caricato e sincronizzato.');
-                            } else {
-                                this.showNotify('Errore', 'Formato file non riconosciuto.', 'error');
-                            }
-                        } catch (err) { this.showNotify('Errore', 'File non valido.', 'error'); }
-                        e.target.value = '';
-                    };
-                    r.readAsText(f);
-                },
-
-                get filteredProducts() {
-                    if (!this.searchFilter.products) return this.products;
-                    const q = this.searchFilter.products.toLowerCase();
-                    return this.products.filter(p => p.name.toLowerCase().includes(q));
-                },
-                get filteredMultiLoadProducts() {
-                    if (!this.searchFilter.multiLoad) return this.products;
-                    const q = this.searchFilter.multiLoad.toLowerCase();
-                    return this.products.filter(p => p.name.toLowerCase().includes(q));
-                },
-                get filteredMultiTransferProducts() {
-                    if (!this.searchFilter.multiTransfer) return this.products;
-                    const q = this.searchFilter.multiTransfer.toLowerCase();
-                    return this.products.filter(p => p.name.toLowerCase().includes(q));
-                },
-                get filteredMultiBoatTransferProducts() {
-                    const list = this.getGroupedSelectableProducts();
-                    if (!this.searchFilter.multiBoatTransfer) return list;
-                    const q = this.searchFilter.multiBoatTransfer.toLowerCase();
-                    return list.filter(p => p.name.toLowerCase().includes(q));
-                },
-                get filteredWarehouseStock() {
-                    const summary = this.getWarehouseStockSummary();
-                    if (!this.searchFilter.warehouse) return summary;
-                    const q = this.searchFilter.warehouse.toLowerCase();
-                    return summary.filter(item => item.name.toLowerCase().includes(q));
-                },
-                get filteredBoats() {
-                    if (!this.searchFilter.boats) return this.boats;
-                    const q = this.searchFilter.boats.toLowerCase();
-                    return this.boats.filter(b => b.name.toLowerCase().includes(q));
-                }
-            };
-        }
-    </script>
-</body>
-</html>
+                    const grp = this.getGroupInfoFor
