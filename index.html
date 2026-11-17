@@ -106,7 +106,7 @@
                 <form @submit.prevent="submitOfficeLogin()" class="space-y-2.5">
                     <label class="block text-[11px] font-bold text-slate-300">Password Amministrazione:</label>
                     <div class="relative">
-                        <input :type="showOfficePassword ? 'text' : 'password'" x-model="officePasswordInput" placeholder="Inserisci PIN ufficio..." class="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 text-white rounded-xl pl-3 pr-10 py-3 text-xs font-extrabold focus:outline-none">
+                        <input :type="showOfficePassword ? 'text' : 'password'" x-model="officePasswordInput" autocomplete="off" placeholder="Inserisci PIN ufficio..." class="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 text-white rounded-xl pl-3 pr-10 py-3 text-xs font-extrabold focus:outline-none">
                         <button type="button" @click="showOfficePassword = !showOfficePassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs p-1">
                             <i :class="showOfficePassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
                         </button>
@@ -118,7 +118,6 @@
                     </button>
                 </form>
             </div>
-            <p class="text-center text-[11px] text-slate-500">PIN Ufficio predefinito: <strong class="text-slate-400">1234</strong></p>
         </div>
     </div>
 
@@ -158,13 +157,13 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- MODAL LINK OPERATORI & SICUREZZA                                         -->
+    <!-- MODAL IMPOSTAZIONI: LINK OPERATORI & CAMBIO PIN                           -->
     <!-- ========================================================================= -->
     <div x-show="operatorLinksModal.open && appScreen === 'office'" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 no-print" x-cloak>
         <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full p-5 space-y-4 shadow-2xl text-white flex flex-col max-h-[88vh]">
             <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
-                <h3 class="text-sm font-extrabold"><i class="fa-brands fa-whatsapp text-emerald-400 mr-2"></i>Link Operatori & Sicurezza</h3>
-                <button @click="operatorLinksModal.open = false" class="bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold">Chiudi</button>
+                <h3 class="text-sm font-extrabold"><i class="fa-solid fa-gear text-blue-400 mr-2"></i>Impostazioni, Sicurezza & Link</h3>
+                <button @click="operatorLinksModal.open = false; newOfficePasswordInput = ''; showNewOfficePassword = false" class="bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold">Chiudi</button>
             </div>
             <div class="space-y-3 shrink-0">
                 <div>
@@ -172,11 +171,16 @@
                     <input type="text" x-model="officeWhatsappNumber" @input="saveOfficeWhatsapp()" placeholder="Numero destinatario WhatsApp..." class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs font-bold">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Cambia PIN Accesso Ufficio</label>
-                    <div class="flex gap-2">
-                        <input type="text" x-model="newOfficePasswordInput" class="flex-1 bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs font-bold">
-                        <button type="button" @click="changeOfficePassword()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Aggiorna PIN</button>
-                    </div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Nuovo PIN Accesso Ufficio</label>
+                    <form @submit.prevent="changeOfficePassword()" class="flex gap-2">
+                        <div class="relative flex-1">
+                            <input :type="showNewOfficePassword ? 'text' : 'password'" x-model="newOfficePasswordInput" autocomplete="new-password" placeholder="Digita nuovo PIN..." class="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 text-white rounded-xl pl-3 pr-9 py-2 text-xs font-bold focus:outline-none">
+                            <button type="button" @click="showNewOfficePassword = !showNewOfficePassword" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs p-1">
+                                <i :class="showNewOfficePassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                            </button>
+                        </div>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold shrink-0">Aggiorna PIN</button>
+                    </form>
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto space-y-2 pr-1">
@@ -293,8 +297,8 @@
                 </nav>
 
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button @click="operatorLinksModal.open = true" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1">
-                        <i class="fa-brands fa-whatsapp"></i><span class="hidden lg:inline">Link & WhatsApp</span>
+                    <button @click="operatorLinksModal.open = true; newOfficePasswordInput = ''; showNewOfficePassword = false" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1" title="Impostazioni, PIN & Link">
+                        <i class="fa-solid fa-gear"></i><span class="hidden lg:inline">Impostazioni & PIN</span>
                     </button>
                     <button @click="exportBackup()" class="bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 p-2 rounded-xl text-xs" title="Scarica Backup"><i class="fa-solid fa-download"></i></button>
                     <label class="bg-blue-600/20 text-blue-400 border border-blue-500/30 p-2 rounded-xl text-xs cursor-pointer" title="Ripristina Backup">
@@ -960,8 +964,9 @@
                 landingSelectedBoatId: '',
                 officePassword: '1234',
                 officePasswordInput: '',
-                newOfficePasswordInput: '1234',
+                newOfficePasswordInput: '',
                 showOfficePassword: false,
+                showNewOfficePassword: false,
                 officeLoginError: '',
                 activeTab: 'dashboard',
                 historySubTab: 'inventari',
@@ -1048,7 +1053,7 @@
                     this.officeWhatsappNumber = localStorage.getItem('gest_office_wa') || '';
                     this.operatorName = localStorage.getItem('gest_operator_name') || '';
                     this.officePassword = localStorage.getItem('gest_office_pwd') || '1234';
-                    this.newOfficePasswordInput = this.officePassword;
+                    this.newOfficePasswordInput = '';
 
                     const savedProducts = localStorage.getItem('gest_products');
                     const savedLoads = localStorage.getItem('gest_loads');
@@ -1167,9 +1172,16 @@
                     this.appScreen = 'landing';
                 },
                 changeOfficePassword() {
-                    this.officePassword = this.newOfficePasswordInput;
+                    const cleanPin = String(this.newOfficePasswordInput || '').trim();
+                    if (!cleanPin) {
+                        this.showNotify('Attenzione', 'Inserisci un PIN valido.', 'error');
+                        return;
+                    }
+                    this.officePassword = cleanPin;
                     localStorage.setItem('gest_office_pwd', this.officePassword);
-                    this.showNotify('Aggiornato', 'PIN ufficio modificato.');
+                    this.newOfficePasswordInput = '';
+                    this.showNewOfficePassword = false;
+                    this.showNotify('Aggiornato', 'PIN ufficio aggiornato con successo.');
                 },
 
                 checkUrlParameters() {
@@ -1648,7 +1660,17 @@
                 },
 
                 exportBackup() {
-                    const data = { products: this.products, warehouseLoads: this.warehouseLoads, boats: this.boats, transfers: this.transfers, boatTransfers: this.boatTransfers, pendolariSheets: this.pendolariSheets, inventoryLogs: this.inventoryLogs };
+                    const data = {
+                        products: this.products,
+                        warehouseLoads: this.warehouseLoads,
+                        boats: this.boats,
+                        transfers: this.transfers,
+                        boatTransfers: this.boatTransfers,
+                        pendolariSheets: this.pendolariSheets,
+                        inventoryLogs: this.inventoryLogs,
+                        officePassword: this.officePassword,
+                        officeWhatsappNumber: this.officeWhatsappNumber
+                    };
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup_flotta_${new Date().toISOString().slice(0,10)}.json`; a.click();
                 },
@@ -1667,6 +1689,14 @@
                                 this.boatTransfers = d.boatTransfers || [];
                                 this.pendolariSheets = d.pendolariSheets || [];
                                 this.inventoryLogs = d.inventoryLogs || [];
+                                if (d.officePassword) {
+                                    this.officePassword = d.officePassword;
+                                    localStorage.setItem('gest_office_pwd', this.officePassword);
+                                }
+                                if (d.officeWhatsappNumber !== undefined) {
+                                    this.officeWhatsappNumber = d.officeWhatsappNumber;
+                                    localStorage.setItem('gest_office_wa', this.officeWhatsappNumber);
+                                }
                                 this.saveToLocalStorage();
                                 this.showNotify('Ripristinato', 'Backup caricato con successo.');
                             }
@@ -1678,4 +1708,4 @@
         }
     </script>
 </body>
-                            </html>
+                                                                                                                         </html>
