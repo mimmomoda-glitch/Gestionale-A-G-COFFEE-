@@ -762,51 +762,136 @@
         </div>
     </div>
 
-    <!-- MODAL STAMPA DDT / BOLLE -->
+    <!-- MODAL STAMPA DDT / BOLLE (LAYOUT UFFICIALE AGGIORNATO) -->
     <template x-if="printModal.open">
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto print-modal-wrapper">
-            <div class="bg-white text-slate-900 max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-300 font-sans text-xs" id="printable-area">
-                <div class="grid grid-cols-2 border border-slate-800 text-[11px] leading-tight mb-2">
-                    <div class="border-r border-slate-800 p-2">
-                        <span class="text-[9px] text-slate-500 uppercase block font-semibold">MITTENTE</span>
-                        <div class="font-bold text-slate-900 text-sm" x-text="companyDetails.name"></div>
-                        <div class="font-bold text-slate-800" x-text="'P.IVA ' + companyDetails.piva"></div>
-                        <div class="mt-1 font-semibold text-slate-800" x-text="companyDetails.address1"></div>
-                        <div class="mt-2 pt-2 border-t border-slate-300">
-                            <span class="text-[9px] text-slate-500 uppercase block font-semibold">DESTINATARIO</span>
-                            <div class="font-bold text-slate-900 text-sm underline" x-text="printModal.destination"></div>
+            <div class="bg-white text-slate-900 max-w-3xl w-full p-5 sm:p-6 shadow-2xl border border-slate-400 font-sans text-xs leading-normal" id="printable-area">
+                
+                <!-- Intestazione Mittente & Documento -->
+                <div class="border border-slate-900 text-[10px] mb-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-900">
+                        <!-- Mittente -->
+                        <div class="p-2">
+                            <span class="text-[8px] text-slate-600 uppercase block font-bold">MITTENTE: DITTA, DIPENDENZA, DOMICILIO O RESIDENZA, P. IVA, COD. FISCALE</span>
+                            <div class="font-black text-sm text-slate-900 mt-0.5" x-text="companyDetails.name"></div>
+                            <div class="font-bold text-slate-800" x-text="'P.IVA ' + companyDetails.piva"></div>
+                            <div class="mt-1 font-semibold text-slate-800 uppercase" x-text="companyDetails.address1"></div>
+                            <div class="font-semibold text-slate-800 uppercase" x-text="companyDetails.address2"></div>
                         </div>
-                    </div>
-                    <div class="p-2 flex flex-col justify-between">
-                        <div>
-                            <span class="font-bold text-base block text-slate-900">DOCUMENTO DI TRASPORTO (D.d.t.)</span>
-                            <div class="mt-2">Numero: <strong class="text-base" x-text="printModal.docNumber"></strong> • Del: <strong x-text="printModal.date"></strong></div>
-                        </div>
-                        <div class="pt-2 border-t border-slate-300">
-                            <span class="text-[9px] text-slate-500 uppercase block font-semibold">LUOGO DI DESTINAZIONE</span>
-                            <div class="font-black text-lg text-slate-900" x-text="printModal.destinationCity || 'NAPOLI'"></div>
+                        <!-- Titolo e Numero DDT -->
+                        <div class="p-2 flex flex-col justify-between">
+                            <div>
+                                <div class="font-black text-sm text-slate-900 uppercase">DOCUMENTO DI TRASPORTO</div>
+                                <div class="text-[9px] text-slate-600 font-semibold">(D.d.t.)</div>
+                                <div class="text-[8px] text-slate-500">D.P.R. 472 del 14.08.1996 - D.P.R. 696 del 21.12.1996</div>
+                                <div class="mt-1.5 flex items-center gap-2">
+                                    <span>Numero: <strong class="text-sm font-black" x-text="printModal.docNumber"></strong></span>
+                                    <span>Del: <strong class="font-black" x-text="printModal.date"></strong></span>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex items-center gap-3 text-[9px] pt-1 border-t border-slate-300">
+                                <span>a mezzo:</span>
+                                <span>() mittente</span>
+                                <span>() vettore</span>
+                                <span>() destinatario</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="border border-slate-800 bg-black text-white px-3 py-1 font-bold text-xs mb-2">CAUSALE: TRASFERIMENTO MERCI</div>
-                <table class="w-full text-left text-xs border-collapse border border-slate-800 mb-4">
+
+                <!-- Destinatario e Luogo di Destinazione -->
+                <div class="border border-slate-900 text-[10px] mb-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-900">
+                        <div class="p-2">
+                            <span class="text-[8px] text-slate-600 uppercase block font-bold">DESTINATARIO: DITTA, DIPENDENZA, DOMICILIO O RESIDENZA, P. IVA, COD. FISCALE</span>
+                            <div class="font-black text-sm text-slate-900 mt-0.5" x-text="companyDetails.name"></div>
+                            <div class="font-bold text-slate-800 underline" x-text="printModal.destination"></div>
+                            <div class="font-bold text-slate-800" x-text="'P.IVA ' + companyDetails.piva"></div>
+                        </div>
+                        <div class="p-2">
+                            <span class="text-[8px] text-slate-600 uppercase block font-bold">LUOGO DI DESTINAZIONE (SE DIVERSO DALL'INDIRIZZO DEL DESTINATARIO)</span>
+                            <div class="font-black text-base text-slate-900 mt-1 uppercase" x-text="printModal.destinationCity || 'NAPOLI'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Causale e Riferimenti Ordine -->
+                <div class="border border-slate-900 text-[10px] p-2 mb-1 flex justify-between items-center">
+                    <div>
+                        <span class="text-[8px] text-slate-600 uppercase block font-bold">CAUSALE DEL TRASPORTO</span>
+                        <div class="font-extrabold text-slate-900 uppercase">TRASFERIMENTO MERCI</div>
+                    </div>
+                    <div class="text-[9px] text-slate-700">
+                        Vs. ordine _____ del _________ N° _____ a saldo
+                    </div>
+                </div>
+
+                <!-- Tabella Articoli -->
+                <table class="w-full text-left text-[11px] border-collapse border border-slate-900 mb-1">
                     <thead>
-                        <tr class="bg-black text-white font-bold text-[11px]">
-                            <th class="p-1.5 w-1/4 border-r border-slate-800 text-center">QUANTITA'</th>
-                            <th class="p-1.5 w-3/4">DESCRIZIONE DEI BENI</th>
+                        <tr class="bg-slate-200 text-slate-900 font-bold uppercase text-[10px] border-b border-slate-900">
+                            <th class="p-1.5 w-1/5 border-r border-slate-900 text-center">QUANTITA'</th>
+                            <th class="p-1.5 w-3/5 border-r border-slate-900">DESCRIZIONE DEI BENI (natura e qualità)</th>
+                            <th class="p-1.5 w-1/5 text-right">IMPORTO*</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-300">
+                    <tbody class="divide-y divide-slate-400 font-mono text-[11px]">
                         <template x-for="item in printModal.items" :key="item.productId">
-                            <tr class="font-mono text-[11px] font-bold">
-                                <td class="p-1.5 text-center border-r border-slate-800" x-text="item.quantity"></td>
-                                <td class="p-1.5 uppercase" x-text="getProductName(item.productId)"></td>
+                            <tr class="font-bold">
+                                <td class="p-1.5 text-center border-r border-slate-900" x-text="item.quantity"></td>
+                                <td class="p-1.5 uppercase border-r border-slate-900 font-sans font-extrabold" x-text="getProductName(item.productId)"></td>
+                                <td class="p-1.5 text-right font-sans"></td>
                             </tr>
                         </template>
                     </tbody>
                 </table>
-                <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 no-print">
-                    <button type="button" @click="printModal.open = false" class="bg-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Chiudi</button>
+
+                <!-- Totale € -->
+                <div class="border border-slate-900 p-2 flex justify-between items-center font-bold text-xs mb-1 bg-slate-50">
+                    <span>TOTALE €</span>
+                    <span>0</span>
+                </div>
+
+                <!-- Dettagli Trasporto inferiori -->
+                <div class="border border-slate-900 text-[9px] mb-1">
+                    <div class="grid grid-cols-4 divide-x divide-slate-900 border-b border-slate-900 text-center font-bold text-[8px] bg-slate-100">
+                        <div class="p-1">ASPETTO ESTERIORE DEI BENI</div>
+                        <div class="p-1">N. COLLI</div>
+                        <div class="p-1">PESO KG.</div>
+                        <div class="p-1">PORTO</div>
+                    </div>
+                    <div class="grid grid-cols-4 divide-x divide-slate-900 h-8">
+                        <div class="p-1"></div>
+                        <div class="p-1"></div>
+                        <div class="p-1"></div>
+                        <div class="p-1"></div>
+                    </div>
+                </div>
+
+                <!-- Firme e Note -->
+                <div class="border border-slate-900 text-[9px] grid grid-cols-2 divide-x divide-slate-900 mb-2">
+                    <div class="p-1.5 space-y-4">
+                        <div>
+                            <span class="text-[7px] text-slate-500 block">Consegna o inizio trasporto a mezzo destinatario/mittente</span>
+                            <div class="h-6">VETTORI _______________________ DATA E ORA DEL RITIRO _________</div>
+                        </div>
+                        <div class="pt-2 border-t border-slate-300">
+                            <span class="text-[7px] text-slate-500 block">ANNOTAZIONI - VARIAZIONI</span>
+                            <div class="h-6"></div>
+                        </div>
+                    </div>
+                    <div class="p-1.5 space-y-4">
+                        <div class="h-8">FIRMA DEL CONDUCENTE ___________________________</div>
+                        <div class="h-8 border-t border-slate-300 pt-1">FIRMA VETTORE _________________________________</div>
+                        <div class="h-8 border-t border-slate-300 pt-1">FIRMA DEL DESTINATARIO _________________________</div>
+                    </div>
+                </div>
+
+                <div class="text-[7px] text-slate-500 text-center mb-4">*Solo in caso di utilizzo in sostituzione della certificazione fiscale</div>
+
+                <!-- Pulsanti Azione (Non stampabili) -->
+                <div class="flex justify-end gap-3 pt-2 border-t border-slate-200 no-print">
+                    <button type="button" @click="printModal.open = false" class="bg-slate-200 px-4 py-2 rounded-xl text-xs font-bold text-slate-900">Chiudi</button>
                     <button type="button" @click="window.print()" class="bg-blue-600 text-white px-5 py-2 rounded-xl text-xs font-bold shadow">Stampa / PDF</button>
                 </div>
             </div>
@@ -1180,7 +1265,6 @@
                     const boat = this.boats.find(b => b.id === this.operatorBoatId);
                     const boatName = boat ? boat.name : 'Barca';
                     
-                    // Compact payload so WhatsApp URL stays short and reliable
                     const countedItems = this.currentInventoryRows
                         .filter(r => Number(r.physicalQty || 0) > 0)
                         .map(r => ({ id: r.productId, q: Number(r.physicalQty) }));
@@ -1220,7 +1304,6 @@
                     this.selectedBoatForInventory = d.b;
                     if (d.d) this.inventoryDate = d.d;
 
-                    // Load theoretical stock from office records, then apply operator physical counts (defaulting uncounted items to 0)
                     this.loadBoatInventoryData(d.b, false);
 
                     const countMap = {};
@@ -1401,7 +1484,6 @@
                         const movedQty = movMap[id] || 0;
                         const theoreticalQty = Math.max(0, initialQty + addedQty + movedQty);
                         
-                        // In operator mode, physicalQty always starts at 0 (blind count)
                         const initialPhysical = isOperatorMode ? 0 : theoreticalQty;
 
                         return {
@@ -1596,4 +1678,4 @@
         }
     </script>
 </body>
-</html>
+                            </html>
